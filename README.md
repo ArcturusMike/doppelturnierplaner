@@ -1,5 +1,5 @@
-# doppelturnierplaner
-To-Do:
+# Doppelturnier-Planer
+To-Do-Liste:
 
 Normal:
 
