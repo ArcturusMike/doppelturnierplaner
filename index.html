@@ -1,5 +1,5 @@
 <!--
-Änderung gegenüber v1.6.3: Das Layout der Ausgabe wurde verändert
+Änderung gegenüber v1.6.4: Hinweise bearbeitet, Spielplan-Überschriften heller gemacht, analysediv standardmäßig leer, alle Inputs deaktivieren
 -->
 
 <!DOCTYPE html>
@@ -115,8 +115,8 @@
         }
 
         .tabhead {
-            background-color: darkslategray;
-            color: white;
+            background-color: silver;
+            color: black;
             font-size: 10pt;
         }
 
@@ -272,16 +272,13 @@
     }
 
     function inputs_umschalten(art) {
-        var spielerinputs_anzahl = document.getElementsByClassName("spielerinputs").length;
-        
-        document.getElementById("erstellen_button").disabled = art;
-        document.getElementById("spieler_button").disabled = art;
-        document.getElementById("mixed").disabled = art;
-        document.getElementById("eingabe_spieler").disabled = art;
-        for (i=0; i<spielerinputs_anzahl; i++) {
-            document.getElementsByClassName("spielerinputs")[i].disabled = art;
+        let alle_inputs_anzahl = document.getElementsByTagName("input").length;
+        for (i=0; i<alle_inputs_anzahl; i++) {
+            document.getElementsByTagName("input")[i].disabled = art;
         }
-
+        document.getElementById("spieler_button").disabled = art;
+        document.getElementById("erstellen_button").disabled = art;
+        
         if (art == true) {
             document.getElementById("reaktivieren_button").style.visibility = "visible";
         }
@@ -976,6 +973,7 @@
         var anfangszeit = performance.now()
         var dauer;
         
+        document.getElementById("analysediv").innerHTML = "";
         document.getElementById("tabellendiv").innerHTML = "";
         document.getElementById("tabellendiv").innerHTML = "<div id='ladekreis'></div>";
         setTimeout(function() {
@@ -1039,7 +1037,7 @@
         var ergebnis_skript = "<script>alert('Damit die Farben gedruckt werden, beim Druckdialog \"Hintergrundgrafiken\" o.Ä. ankreuzen! \\n\\nSofern der Spielplan nicht auf die ganze Seite passt, versuchen die Seite per Druckeinstellungen zu skalieren!');<\/script>";
 
 
-        var design = '<style>body {font-family: sans-serif;} .spielplantabellen {border-collapse: collapse; background-color: white;} th, td {text-align: center; padding: 5px;} .rundenspalte, .spielspalte, .ergebnisspalte {min-width: 120px;} .platzspalte {width: 75px;} /*.spielspalte {padding-left: 30px; padding-right: 30px;}*/ .tabhead {background-color: darkslategray;color: white; font-size: 10pt;} input[type="text"] {width: 10em;}</style>';
+        var design = '<style>body {font-family: sans-serif;} .spielplantabellen {border-collapse: collapse; background-color: white;} th, td {text-align: center; padding: 5px;} .rundenspalte, .spielspalte, .ergebnisspalte {min-width: 120px;} .platzspalte {width: 75px;} /*.spielspalte {padding-left: 30px; padding-right: 30px;}*/ .tabhead {background-color: silver;color: black; font-size: 10pt;} input[type="text"] {width: 10em;}</style>';
         
         var printContent = document.getElementById("druckbereich");
         var WinPrint = window.open();
@@ -1069,10 +1067,11 @@
             <b>Tipps und Hinweise: </b>
             <ul>
                 <li>Man kann die <b>Ergebnisse direkt in die Tabelle eintragen!</b> <br>(Achtung: Wenn die Seite geschlossen wird, gehen die Ergebnisse verloren!)</li>
+                <li>Die Tabelle kann einfach <b>kopiert</b> und in Excel etc. <b>eingefügt werden</b>.</li>
                 <li>Die Uhrzeit eines Spieles in der Tabelle <b>ist bearbeitbar</b>.</li>
                 <li>Beim Mixed-Modus werden <b>gleich viele Damen wie Herren</b> benötigt.</li>
                 <li><b>Keine " - " oder "/" im Spielernamen</b> verwenden ("-" ist ok). Ansonsten kommt es zu <b>Fehlern</b>!</li>
-                <li>Doppelte Paarungen werden <b>so gut wie möglich</b> vermieden. Leider kann es je nach Spieler-, Platz- und Rundenzahlen trotzdem doppelte Paarungen geben.</li>
+                <li>Wichtig: <b>Keine Namen sollen in anderen enthalten sein</b>, z.B. "Mark" und "Markus" führen zu Fehlermeldungen (Marc nicht). "Wernig E." und "Wernig H." sind aber in Ordnung, weil immer der komplette Name beachtet wird.</li>
                 <li>Es wird <b>2 Minuten lang</b> versucht, einen guten Spielplan zu generieren. Danach wird abgebrochen. Bei Bedarf einfach erneut versuchen.</li>
                 <li>Wenn eine Meldung kommt, dass die <b>Seite nicht reagiert</b>, bitte einfach auf <b>"Warten"</b> klicken und abwarten.</li>
             </ul>
@@ -1094,12 +1093,12 @@
         <br>
         <input type="number" min=0 value=5 id="pausenzeit" onchange="vorschau()">
         <br><br>
-        <label for="halbzeit">Halbzeit (Minuten):</label>
+        <label for="halbzeit">Große Pause (Minuten):</label>
         <br>
         <input type="number" min=0 value=0 id="halbzeit" onchange="vorschau()">
         <br>
-        <p id="endzeit">Endzeit: </p>
-        <p id="spiele_pro_spieler">Spiele pro Spieler: </p>
+        <b><p id="endzeit">Endzeit: </p></b>
+        <b><p id="spiele_pro_spieler">Spiele pro Spieler: </p></b>
         <label for="eingabe_runden">Anzahl der Runden:</label>
         <br>
         <input type="number" min=1 max="26" value=4 id="eingabe_runden" onchange="vorschau()">
@@ -1119,14 +1118,14 @@
         <br>
         <button onclick="erstellen()" id="erstellen_button" disabled>Spielplan erstellen</button>
         <br><br>
-        <button onclick="inputs_umschalten(false)" id="reaktivieren_button">Buttons reaktivieren</button>
+        <button onclick="inputs_umschalten(false)" id="reaktivieren_button">Eingabefelder reaktivieren</button>
         <br><br>
     </div>
     <div id="tabellendiv"></div>
     <div id="analysediv"></div>
 
     <div id="version">
-        <span>Version 1.6.4</span>
+        <span>Version 1.6.5</span>
         <br>
         <span>© Michael Hobel</span>
     </div>
@@ -1136,6 +1135,7 @@
     window.addEventListener('beforeunload', function (e) {
         e.preventDefault();
         e.returnValue = '';
+        return "Soll die aktuelle Seite geschlossen oder neu geladen werden? ALLE Daten gehen verloren!";
     });
     
 </script>
