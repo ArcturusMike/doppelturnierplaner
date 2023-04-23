@@ -22,5 +22,5 @@ In ferner Zukunft:
 - ChatGPT nach alternativen Generationsmöglichkeiten fragen
 - Auswertung der Siege inkl. Ranking auf Knopfdruck... dazu wird aber ein Major Rewrite benötigt, damit die Darstellung anders wird (Flashscore-ähnlich)
 
-Erledigt:
+**Erledigt:**
 + "Webapp", hosted via Github Pages
