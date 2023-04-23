@@ -1,14 +1,13 @@
 # To-Do-Liste
 
-Normal:
+**Normal:**
 
 
-Mixed:
+**Mixed:**
 
 
-Generell:
+**Generell:**
 - Schließen-Alert wieder aktivieren
-+ "Webapp", hosted via Github Pages
 - Anordnung der Inputs ändern (was tragt man zuerst ein?)
 - Schließen-Alerts verfielfachen (5x nachfragen!)
 - "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben
@@ -19,7 +18,9 @@ Generell:
 - Performance optimieren: https://www.w3schools.com/js/js_performance.asp
 (- Layout der Inputs ändern: Horizontal statt vertikal, damit unten Platz für die Ausgabe ist; oder: Partner-Gegner-Tabelle loslösen von Spielplan und weiter unten anzeigen)
 
-
 In ferner Zukunft:
 - ChatGPT nach alternativen Generationsmöglichkeiten fragen
 - Auswertung der Siege inkl. Ranking auf Knopfdruck... dazu wird aber ein Major Rewrite benötigt, damit die Darstellung anders wird (Flashscore-ähnlich)
+
+Erledigt:
++ "Webapp", hosted via Github Pages
