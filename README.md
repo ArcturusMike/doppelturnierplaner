@@ -1,4 +1,5 @@
-# To-Do-Liste
+# Spielplangenerator
+## To-Do-Liste
 
 **Normal:**
 
@@ -21,7 +22,7 @@ In ferner Zukunft:
 
 
 **Erledigt:**
-+ "Webapp", hosted via Github Pages
+- [x] "Webapp", hosted via Github Pages
 
 
 **Nicht möglich oder notwendig:**
