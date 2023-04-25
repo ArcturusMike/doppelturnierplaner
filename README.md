@@ -9,14 +9,14 @@
 **Generell:**
 - Schließen-Alert wieder aktivieren
 - Anordnung der Inputs ändern (was tragt man zuerst ein?)
-- Schließen-Alerts verfielfachen (5x nachfragen!)
-- "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben
-- Die Beschränkung von max. 26 Spielern (und Runden) aufheben
-- Gegner-Generierung verbessern (doppelt und dreifach 1 Person)
-- Die Auto-Neu-Generierung verbessern: Wenn nach gewisser Zeit keine Spiele ohne doppelten Paarungen gefunden werden konnten, die Bedingungen erleichtern, z.B. 2 Spieler dürfen doppelte Partner haben oder jeder darf 1 doppelten Partner haben o.Ä. etc.
+- Schließen-Alerts vervielfachen (5x nachfragen!)
+- "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben.
 - var zu let & const austauschen bzw. generell ALLE Variablen nach heutigem Standard deklarieren
+- Die Beschränkung von max. 26 Spielern und Runden aufheben
+- Die Auto-Neugenerierung verbessern: Wenn nach gewisser Zeit keine Spiele ohne doppelten Paarungen gefunden werden konnten, die Bedingungen erleichtern, z.B. 2 Spieler dürfen doppelte Partner haben oder jeder darf 1 doppelten Partner haben o.Ä. etc. (für die Gegner das gleiche)
+- Gegner-Generierung verbessern (doppelt und dreifach 1 Person)
 - Performance optimieren: https://www.w3schools.com/js/js_performance.asp
-(- Layout der Inputs ändern: Horizontal statt vertikal, damit unten Platz für die Ausgabe ist; oder: Partner-Gegner-Tabelle loslösen von Spielplan und weiter unten anzeigen)
+- (Layout der Inputs ändern: Horizontal statt vertikal, damit unten Platz für die Ausgabe ist; oder: Partner-Gegner-Tabelle loslösen von Spielplan und weiter unten anzeigen)
 
 In ferner Zukunft:
 - ChatGPT nach alternativen Generationsmöglichkeiten fragen
