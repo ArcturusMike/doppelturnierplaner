@@ -9,6 +9,7 @@
 
 **Generell:**
 - [ ] Schließen-Alert wieder aktivieren
+- [ ] Bei den Namen-Inputs gleich bei der Eingabe auf Strings prüfen, die zu Fehlern führen werden (z.B. " - ", "Marc" etc.)
 - [ ] var zu let & const austauschen bzw. generell ALLE Variablen nach heutigem Standard deklarieren
 - [ ] "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben.
 - [ ] Die Auto-Neugenerierung verbessern: Wenn nach gewisser Zeit keine Spiele ohne doppelten Paarungen gefunden werden konnten, die Bedingungen erleichtern, z.B. 2 Spieler dürfen doppelte Partner haben oder jeder darf 1 doppelten Partner haben o.Ä. etc. (für die Gegner das gleiche)
@@ -28,4 +29,4 @@ In ferner Zukunft:
 **Nicht möglich oder notwendig:**
 - "Schließen?"-Alerts vervielfachen (nicht möglich)
 - Anordnung der Inputs ändern (was tragt man zuerst ein?) (nicht notwendig)
-- Layout der Inputs ändern: Horizontal statt vertikal, damit unten Platz für die Ausgabe ist; oder: Partner-Gegner-Tabelle loslösen von Spielplan und weiter unten anzeigen
+- Layout der Inputs ändern: Horizontal statt vertikal, damit unten Platz für die Ausgabe ist; oder: Partner-Gegner-Tabelle loslösen von Spielplan und weiter unten anzeigen (nicht notwendig)
