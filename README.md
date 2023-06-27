@@ -10,6 +10,7 @@
 **Generell:**
 - [ ] Schließen-Alert wieder aktivieren
 - [ ] Bei den Namen-Inputs gleich bei der Eingabe auf Strings prüfen, die zu Fehlern führen werden (z.B. " - ", "Marc" etc.)
+- [ ] Eine Funktion, die automatisch durch die Plätze-Spieler-Rundenkombinationen durchiteriert, sodass die gewünschten Anzahl an Spielen pro Spielern errreicht wird --> Als Überbrückung zur Generation nach Spielen pro Spieler (siehe unten)
 - [ ] Auf min. 30 Spieler aufstocken
 - [ ] Die Namen nicht löschen, wenn die Spieleranzahl geändert wird
 - [ ] var zu let & const austauschen bzw. generell ALLE Variablen nach heutigem Standard deklarieren
