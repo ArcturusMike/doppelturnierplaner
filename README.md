@@ -9,12 +9,11 @@
 
 **Generell:**
 - [ ] Schließen-Alert wieder aktivieren
-- [x] Auf 32 Spieler / Runden aufstocken --> "...x, y, z, A, B, C, D, E, F"
 - [ ] Die Namen nicht löschen, wenn die Spieleranzahl geändert wird
 - [ ] Bei den Namen-Inputs gleich bei der Eingabe auf Strings prüfen, die zu Fehlern führen werden (z.B. " - ", "Marc" etc.)
 - [ ] Eine Funktion, die automatisch durch die Plätze-Spieler-Rundenkombinationen durchiteriert, sodass die gewünschten Anzahl an Spielen pro Spielern erreicht wird --> Als Überbrückung zur Generation nach Spielen pro Spieler (siehe unten)
-- [ ] var zu let & const austauschen bzw. generell ALLE Variablen nach heutigem Standard deklarieren
 - [ ] "eval" zu arrays tauschen, sollte eigentlich keine großen Probleme auslösen
+- [ ] var zu let & const austauschen bzw. generell ALLE Variablen nach heutigem Standard deklarieren
 - [ ] "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben.
 - [ ] Die Generation nach Runden duch Generation nach gewünschter Spiele pro Spieler ersetzen
 - [ ] Die Auto-Neugenerierung verbessern: Wenn nach gewisser Zeit keine Spiele ohne doppelten Paarungen gefunden werden konnten, die Bedingungen erleichtern, z.B. 2 Spieler dürfen doppelte Partner haben oder jeder darf 1 doppelten Partner haben o.Ä. etc. (für die Gegner das gleiche)
@@ -27,7 +26,7 @@ In ferner Zukunft:
 
 
 **Erledigt:**
-
+- [x] Auf 32 Spieler / Runden aufstocken --> "...x, y, z, A, B, C, D, E, F"
 
 
 **Nicht möglich oder notwendig:**
