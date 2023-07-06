@@ -9,7 +9,6 @@
 
 **Generell:**
 - [ ] Schließen-Alert wieder aktivieren
-- [ ] Die Namen nicht löschen, wenn die Spieleranzahl geändert wird
 - [ ] Bei den Namen-Inputs gleich bei der Eingabe auf Strings prüfen, die zu Fehlern führen werden (z.B. " - ", "Marc" etc.)
 - [ ] Eine Funktion, die automatisch durch die Plätze-Spieler-Rundenkombinationen durchiteriert, sodass die gewünschten Anzahl an Spielen pro Spielern erreicht wird --> Als Überbrückung zur Generation nach Spielen pro Spieler (siehe unten)
 - [ ] "eval" zu arrays tauschen, sollte eigentlich keine großen Probleme auslösen
@@ -27,6 +26,7 @@ In ferner Zukunft:
 
 **Erledigt:**
 - [x] Auf 32 Spieler / Runden aufstocken --> "...x, y, z, A, B, C, D, E, F"
+- [x] Die Namen nicht löschen, wenn die Spieleranzahl geändert wird
 
 
 **Nicht möglich oder notwendig:**
