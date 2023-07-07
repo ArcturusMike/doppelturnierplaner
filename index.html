@@ -1,5 +1,5 @@
 <!--
-Änderung gegenüber v1.6.4: Hinweise bearbeitet, Spielplan-Überschriften heller gemacht, analysediv standardmäßig leer, alle Inputs deaktivieren
+Änderung gegenüber v1.6.5: Auf 32 Spieler und Runden aufgestockt; die Spielernamen werden nicht zurückgesetzt, sondern bei neuer Spieleranzahl übernommen; es wird auf verbotene Strings und Namen geprüft
 -->
 
 <!DOCTYPE html>
@@ -163,13 +163,13 @@
     // manche der später benötigten Variablen werden schon hier definiert
     var alle_partner_gut, anzahl_runden, anzahl_spiele_pro_runde, doppelkombinationen, maximal_zweifache_gegner, n, next_player_1, next_player_2, next_player_3, next_player_4, plaetze, spieler_spiele_anzahl_array, spieler_spiele_anzahl_array_herren, spieler_spiele_anzahl_array_damen, spielplan, spielplan_rest, spielplan_string, tabellenzeilen, startzeit, spielzeit, pausenzeit, zeit;
 
-    var alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
-    for (i=26; i>0; i--) { 
+    let alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F"];
+    for (i=32; i>0; i--) { 
         eval("var spieler" + i + ";");
         eval("var partner_spieler" + i+ ";");
         eval("var gegner_spieler" + i + ";");
         eval("var anzahl_spiele_spieler" + i + ";");
-        eval("var runde" + i + ";"); // 26 Runden weil eher nicht mehr als 26 benötigt werden
+        eval("var runde" + i + ";"); // 32 Runden weil eben so generiert wird, später evtl. ändern
     }
 
 
@@ -1009,28 +1009,89 @@
         }, 0);
     }
 
+    let alte_spielernamen = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
+    let alte_spielernamen_herren = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
+    let alte_spielernamen_damen = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
+    let davor = "";
     function spieler_anzeigen() {
+        // Alte Namen speichern und ausgeben
+        let alte_spielerinputanzahl = document.getElementsByClassName("spielerinputs").length;
+        if (document.getElementById("mixed").checked) {
+            if (davor == "mixed") {
+                for (let i=0; i<(alte_spielerinputanzahl/2); i++) {
+                    alte_spielernamen_herren[i] = document.getElementsByClassName("spielerinputs")[(i*2)].value;
+                    alte_spielernamen_damen[i] = document.getElementsByClassName("spielerinputs")[(i*2+1)].value;
+                }
+            }
+        }
+        else {
+            if (davor == "normal") {
+                for (let i=0; i<alte_spielerinputanzahl; i++) {
+                    alte_spielernamen[i] = document.getElementsByClassName("spielerinputs")[i].value;
+                }
+            }
+        }
+
         document.getElementById("spielernamen").innerHTML = "";
         var anzahl = document.getElementById("eingabe_spieler").value;
-        var alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
         var spielerinputs = "";
         
         if (document.getElementById("mixed").checked) {
+            if (alte_spielernamen_herren[0] == "") {
+                alte_spielernamen_herren = alphabet.slice(0, (alphabet.length/2));
+                alte_spielernamen_damen = alphabet.slice((alphabet.length/2));
+            }
             spielerinputs = "<table border=0><tr><th>Herren</th><th>Damen</th></tr>";
             for (i=1; i<=anzahl; i++) {
-                spielerinputs += "<tr><td>Spieler " + i + ": <input type='text' value='" + alphabet[i-1] + "' id='spieler" + i + "' class='spielerinputs'></td><td>Spielerin " + i + ": <input type='text' value='" + alphabet[i+(anzahl-1)] + "' id='spieler" + (anzahl-0+i) + "' class='spielerinputs'></td></tr>";   // das muss so blöd gelöst werden weil die Zahlen sonst als String zusammengebaut werden...
+                spielerinputs += "<tr><td>Spieler " + i + ": <input type='text' value='" + alte_spielernamen_herren[i-1] + "' id='spieler" + i + "' class='spielerinputs' onchange='namen_check()'></td><td>Spielerin " + i + ": <input type='text' value='" + alte_spielernamen_damen[i-1] + "' id='spieler" + (anzahl-0+i) + "' class='spielerinputs' onchange='namen_check()'></td></tr>";   // das muss so blöd gelöst werden weil die Zahlen sonst als String zusammengebaut werden...
             }
             spielerinputs += "</table>";
+            davor = "mixed";
         }
         else {
-            for (i=1; i<=anzahl; i++) {
-                spielerinputs += "Spieler " + i + ": <input type='text' value='" + alphabet[i-1] + "' id='spieler" + i + "' class='spielerinputs'><br>";
+            if (alte_spielernamen[0] == "") {
+                alte_spielernamen = alphabet;
             }
+            for (i=1; i<=anzahl; i++) {
+                spielerinputs += "Spieler " + i + ": <input type='text' value='" + alte_spielernamen[i-1] + "' id='spieler" + i + "' class='spielerinputs' onchange='namen_check()'><br>";
+            }
+            davor = "normal";
         }
         
-        spielerinputs += "<p><b>Bitte eindeutige Spielernamen verwenden!<br>(heißt z.B. keine Zahlen wie 1, 10, 11 etc.)<br><br>Bei Mixed bitte gleich viele Damen wie Herren eintragen!</p>";
         document.getElementById("spielernamen").innerHTML = spielerinputs;
         document.getElementById("erstellen_button").disabled = false;
+
+        namen_check();
+    }
+
+    function namen_check() {
+        let alle_spielerinputs = document.getElementsByClassName("spielerinputs");
+        for (let i=0; i<alle_spielerinputs.length; i++) {
+           alle_spielerinputs[i].style.backgroundColor = "";
+        }
+
+        // Create an array of forbidden strings
+        let forbiddenStrings = ["/", " - "];
+
+        // Iterate over each input field
+        for (let i=0; i<alle_spielerinputs.length; i++) {
+            let inputValue = alle_spielerinputs[i].value;
+
+            // Check if the input value matches any forbidden string
+            for (let u=0; u<forbiddenStrings.length; u++) {
+                if (inputValue.includes(forbiddenStrings[u])) {
+                    alle_spielerinputs[i].style.backgroundColor = "red";
+                }
+            }
+            
+            // Check if the input value matches any other input value with the same class
+            for (let j=0; j<alle_spielerinputs.length; j++) {
+                if (i != j && alle_spielerinputs[j].value.includes(inputValue)) {
+                    alle_spielerinputs[j].style.backgroundColor = "orange";
+                    alle_spielerinputs[i].style.backgroundColor = "orange";
+                }
+            }
+        }
     }
 
     function drucken() {
@@ -1051,10 +1112,12 @@
     function modus() {
         var modus_cb = document.getElementById("mixed");
         if (modus_cb.checked) {
-            document.getElementById("spieler_label").innerHTML = "Anzahl der Spieler pro Geschlecht (max. 13): ";
+            document.getElementById("spieler_label").innerHTML = "Anzahl der Spieler pro Geschlecht (max. 16): ";
+            document.getElementById("eingabe_spieler").setAttribute("max", 16);
         }
         else {
-            document.getElementById("spieler_label").innerHTML = "Anzahl der Spieler (max. 26): ";
+            document.getElementById("spieler_label").innerHTML = "Anzahl der Spieler (max. 32): ";
+            document.getElementById("eingabe_spieler").setAttribute("max", 32);
         }
         
         vorschau()
@@ -1069,9 +1132,8 @@
                 <li>Man kann die <b>Ergebnisse direkt in die Tabelle eintragen!</b> <br>(Achtung: Wenn die Seite geschlossen wird, gehen die Ergebnisse verloren!)</li>
                 <li>Die Tabelle kann einfach <b>kopiert</b> und in Excel etc. <b>eingefügt werden</b>.</li>
                 <li>Die Uhrzeit eines Spieles in der Tabelle <b>ist bearbeitbar</b>.</li>
-                <li>Beim Mixed-Modus werden <b>gleich viele Damen wie Herren</b> benötigt.</li>
-                <li><b>Keine " - " oder "/" im Spielernamen</b> verwenden ("-" ist ok). Ansonsten kommt es zu <b>Fehlern</b>!</li>
-                <li>Wichtig: <b>Keine Namen sollen in anderen enthalten sein</b>, z.B. "Mark" und "Markus" führen zu Fehlermeldungen (Marc nicht). "Wernig E." und "Wernig H." sind aber in Ordnung, weil immer der komplette Name beachtet wird.</li>
+                <li><b>Keine " - " oder "/" im Spielernamen</b> verwenden ("-" ist ok) --> rote Fehlermeldung</li>
+                <li><b>Keine Namen sollen in anderen enthalten sein</b> --> orange Fehlermeldung</li>
                 <li>Es wird <b>2 Minuten lang</b> versucht, einen guten Spielplan zu generieren. Danach wird abgebrochen. Bei Bedarf einfach erneut versuchen.</li>
                 <li>Wenn eine Meldung kommt, dass die <b>Seite nicht reagiert</b>, bitte einfach auf <b>"Warten"</b> klicken und abwarten.</li>
             </ul>
@@ -1101,7 +1163,7 @@
         <b><p id="spiele_pro_spieler">Spiele pro Spieler: </p></b>
         <label for="eingabe_runden">Anzahl der Runden:</label>
         <br>
-        <input type="number" min=1 max="26" value=4 id="eingabe_runden" onchange="vorschau()">
+        <input type="number" min=1 max="32" value=4 id="eingabe_runden" onchange="vorschau()">
         <br><br>
         <label for="eingabe_plaetze">Anzahl der Plätze: </label>
         <br>
@@ -1109,9 +1171,9 @@
         <br><br>
         <input type="checkbox" id="mixed" onclick="modus()"><label for="mixed">Mixed-Modus</label>
         <br><br>
-        <label for="eingabe_spieler" id="spieler_label">Anzahl der Spieler (max. 26): </label>
+        <label for="eingabe_spieler" id="spieler_label">Anzahl der Spieler (max. 32): </label>
         <br>
-        <input type="number" min=4 max=26 value=12 id="eingabe_spieler" onchange="vorschau()">
+        <input type="number" min=4 max=32 value=12 id="eingabe_spieler" onchange="vorschau()">
         <button onclick="spieler_anzeigen()" id="spieler_button">Auswählen</button>
         <br><br>
         <div id="spielernamen"></div>
@@ -1125,19 +1187,19 @@
     <div id="analysediv"></div>
 
     <div id="version">
-        <span>Version 1.6.5</span>
+        <span>Version 1.7.0</span>
         <br>
         <span>© Michael Hobel</span>
     </div>
 
 <script>
-    
+    /*
     window.addEventListener('beforeunload', function (e) {
         e.preventDefault();
         e.returnValue = '';
         return "Soll die aktuelle Seite geschlossen oder neu geladen werden? ALLE Daten gehen verloren!";
     });
-    
+    */
 </script>
 </body>
 </html>
