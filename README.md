@@ -9,7 +9,6 @@
 
 **Generell:**
 - [ ] Schließen-Alert wieder aktivieren
-- [ ] Bei den Namen-Inputs im Mixed-Modus die Standard-Namen prüfen, es gibt einen Bug
 - [ ] Eine Funktion, die automatisch durch die Plätze-Spieler-Rundenkombinationen durchiteriert, sodass die gewünschten Anzahl an Spielen pro Spielern erreicht wird --> Als Überbrückung zur Generation nach Spielen pro Spieler (siehe unten)
 - [ ] "eval" zu arrays tauschen, sollte eigentlich keine großen Probleme auslösen
 - [ ] var zu let & const austauschen bzw. generell ALLE Variablen nach heutigem Standard deklarieren
@@ -28,6 +27,7 @@ In ferner Zukunft:
 - [x] Auf 32 Spieler / Runden aufstocken --> "...x, y, z, A, B, C, D, E, F"
 - [x] Die Namen nicht löschen, wenn die Spieleranzahl geändert wird
 - [x] Bei den Namen-Inputs gleich bei der Eingabe auf Strings prüfen, die zu Fehlern führen werden (z.B. " - ", "Marc" etc.)
+- [x] Bei den Namen-Inputs im Mixed-Modus die Standard-Namen prüfen, es gibt einen Bug
 
 
 **Nicht möglich oder notwendig:**
