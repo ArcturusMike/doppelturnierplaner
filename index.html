@@ -1,5 +1,5 @@
 <!--
-Änderung gegenüber v1.6.5: Auf 32 Spieler und Runden aufgestockt; die Spielernamen werden nicht zurückgesetzt, sondern bei neuer Spieleranzahl übernommen; es wird auf verbotene Strings und Namen geprüft
+Änderung gegenüber v1.7.0: Button mit Iteration durch Inputfelder, um gerade Anzahl an Spielen pro Spielern zu bekommen
 -->
 
 <!DOCTYPE html>
@@ -47,13 +47,6 @@
         .platzspalte {
             width: 75px;
         }
-
-        /*
-        .spielspalte {
-            padding-left: 30px;
-            padding-right: 30px;
-        }
-        */
 
         #auswertungstabelle th, #auswertungstabelle td {
             padding-left: 30px;
@@ -141,6 +134,12 @@
 
         #reaktivieren_button {
             visibility: hidden;
+        }
+
+        #spieleprospieler_button {
+            font-size: 10pt;
+            padding: 3px;
+            margin-top: 6px;
         }
 
         #ladekreis {
@@ -735,6 +734,30 @@
         document.getElementById("spiele_pro_spieler").innerHTML = "<u>Spiele pro Spieler:</u> " + sps.toFixed(1);
     }
 
+    function spiele_pro_spieler_helfer() {
+        const max_spieler = document.getElementById("eingabe_spieler").value;
+        const max_plaetze = document.getElementById("eingabe_plaetze").value;
+        const mixedInput = document.getElementById("mixed").checked;
+
+        let koeffizient = 1;
+        if (mixedInput == true) {koeffizient = 2;} 
+
+        let ergebnis = "";
+        let sps;
+        // Durch Runden, Plätze, Spieler durchiterieren, eine gerade Anzahl an Spielen pro Spielern herauskommt
+        for (let s=max_spieler; s>=(max_spieler-3); s--) { // Spieler
+            for (let p=max_plaetze; p>=2; p--) { // Plätze              
+                for (let r=4; r<=30; r++) { // Runden
+                    sps = (4*p*r)/(koeffizient*s);
+                    if (sps % 1 == 0 && sps >= 2 && sps <= 10) {
+                        ergebnis += sps + " = " + s + " Spieler, " + p + " Plätze, " + r + " Runden" + "\n";
+                    }
+                }
+            }
+        }
+        alert(ergebnis);
+    }
+
     function erstellen_zusammen() {
         console.clear();
 
@@ -1136,6 +1159,7 @@
                 <li><b>Keine Namen sollen in anderen enthalten sein</b> --> orange Fehlermeldung</li>
                 <li>Es wird <b>2 Minuten lang</b> versucht, einen guten Spielplan zu generieren. Danach wird abgebrochen. Bei Bedarf einfach erneut versuchen.</li>
                 <li>Wenn eine Meldung kommt, dass die <b>Seite nicht reagiert</b>, bitte einfach auf <b>"Warten"</b> klicken und abwarten.</li>
+                <li>Um eine <b>gleiche Anzahl an Spielen pro Spielern</b> zu erreichen: <br>In den Plätze- und Spieler-Eingabefeldern die jeweilige MAXIMALE Anzahl eintragen und danach auf den "Hilfe"-Button unten klicken. Es werden daraufhin Kombinationen angezeigt, mit denen eine gerade Anzahl an Spielern erreicht wird.</li>
             </ul>
         </div>
         <br><br>
@@ -1175,6 +1199,8 @@
         <br>
         <input type="number" min=4 max=32 value=12 id="eingabe_spieler" onchange="vorschau()">
         <button onclick="spieler_anzeigen()" id="spieler_button">Auswählen</button>
+        <br>
+        <button onclick="spiele_pro_spieler_helfer()" id="spieleprospieler_button">Hilfe für Spiele pro Spieler (siehe Tipp oben!)</button>
         <br><br>
         <div id="spielernamen"></div>
         <br>
@@ -1187,19 +1213,19 @@
     <div id="analysediv"></div>
 
     <div id="version">
-        <span>Version 1.7.0</span>
+        <span>Version 1.7.1</span>
         <br>
         <span>© Michael Hobel</span>
     </div>
 
 <script>
-    /*
+    
     window.addEventListener('beforeunload', function (e) {
         e.preventDefault();
         e.returnValue = '';
         return "Soll die aktuelle Seite geschlossen oder neu geladen werden? ALLE Daten gehen verloren!";
     });
-    */
+    
 </script>
 </body>
 </html>
