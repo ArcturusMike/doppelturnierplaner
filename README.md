@@ -9,6 +9,7 @@
 
 **Generell:**
 - [ ] Schließen-Alert wieder aktivieren
+- [ ] BUG: Beim Wechsel von Mixed auf Normal sollen die gespeicherten Namen engezeigt werden
 - [ ] var zu let & const austauschen bzw. generell ALLE Variablen nach heutigem Standard deklarieren
 - [ ] "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben.
 - [ ] Die Generation nach Runden duch Generation nach gewünschter Spiele pro Spieler ersetzen
