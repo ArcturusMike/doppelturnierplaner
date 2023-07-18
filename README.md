@@ -9,7 +9,6 @@
 
 **Generell:**
 - [ ] Schließen-Alert wieder aktivieren
-- [ ] "eval" zu arrays tauschen, sollte eigentlich keine großen Probleme auslösen
 - [ ] var zu let & const austauschen bzw. generell ALLE Variablen nach heutigem Standard deklarieren
 - [ ] "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben.
 - [ ] Die Generation nach Runden duch Generation nach gewünschter Spiele pro Spieler ersetzen
@@ -28,6 +27,7 @@ In ferner Zukunft:
 - [x] Bei den Namen-Inputs gleich bei der Eingabe auf Strings prüfen, die zu Fehlern führen werden (z.B. " - ", "Marc" etc.)
 - [x] Bei den Namen-Inputs im Mixed-Modus die Standard-Namen prüfen, es gibt einen Bug
 - [x] Eine Funktion, die automatisch durch die Plätze-Spieler-Rundenkombinationen durchiteriert, sodass die gewünschten Anzahl an Spielen pro Spielern erreicht wird --> Als Überbrückung zur Generation nach Spielen pro Spieler (siehe unten)
+- [x] "eval" zu arrays tauschen, sollte eigentlich keine großen Probleme auslösen
 
 **Nicht möglich oder notwendig:**
 - "Schließen?"-Alerts vervielfachen (nicht möglich)
