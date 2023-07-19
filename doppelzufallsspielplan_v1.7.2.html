@@ -1,0 +1,1228 @@
+<!--
+Änderung gegenüber v1.7.1: "eval" zu Arrays geändert
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spielplangenerator Doppelturnier</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            font-family: sans-serif;
+        }
+
+        body {
+            background-color: rgba(0, 89, 255, 0.3);
+        }
+        
+        #eingabediv, input, button {
+            font-size: 12pt;
+        }
+
+        .spielplantabellen {
+            border-collapse: collapse;
+            background-color: white;
+        }
+
+        #druckbereich table {
+            font-size: 12pt;
+        }
+    
+        #drucken {
+            float: right;
+            margin-top: -35px;
+        }
+        
+        th, td {
+            text-align: center;
+            padding: 5px;
+        }
+
+        .rundenspalte, .spielspalte, .ergebnisspalte {
+            min-width: 120px;
+        }
+
+        .platzspalte {
+            width: 75px;
+        }
+
+        #auswertungstabelle th, #auswertungstabelle td {
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+
+        #version {
+            position: fixed;
+            right: 5px;
+            bottom: 5px;
+            font-size: 9pt;
+            text-align: right;
+        }
+
+        #eingabediv, #tabellendiv {
+            float: left;
+        }
+
+        #eingabediv {
+            max-width: 40%;
+            margin-right: 100px;
+        }
+
+        #analysediv {
+            clear: both;
+            padding-top: 20px;
+        }
+
+        .spiele_analyse {
+            color: white; 
+            font-size: 14pt; 
+            padding: 6px; 
+            border-radius: 5px;
+        }
+
+        .partner_gegner_analyse {
+            color: white;
+            padding: 5px; 
+            border-radius: 5px;
+        }
+
+        .gruen {
+            background-color: green; 
+        }
+
+        .rot {
+            background-color: red;
+        }
+
+        #tipps {
+            border-radius: 10px;
+            padding: 10px;
+            background-color: white;
+            font-size: 11pt;
+        }
+
+        li {
+            padding-bottom: 15px;
+        }
+
+        .tabhead {
+            background-color: silver;
+            color: black;
+            font-size: 10pt;
+        }
+
+        input[type="text"], input[type="number"], input[type="time"] {
+            width: 10em;
+        }
+
+        #mixed {
+            width: 12pt;
+            height: 12pt;
+        }
+
+        button, #eingabediv input[type="text"], #eingabediv input[type="number"], input[type="time"] {
+            border: 1px solid grey;
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        button:enabled:hover {
+            cursor: pointer;
+        }
+
+        #reaktivieren_button {
+            visibility: hidden;
+        }
+
+        #spieleprospieler_button {
+            font-size: 10pt;
+            padding: 3px;
+            margin-top: 6px;
+        }
+
+        #ladekreis {
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #3498db;
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body onload="vorschau()">    
+<script>
+    // manche der später benötigten Variablen werden schon hier definiert
+    var alle_partner_gut, anzahl_runden, anzahl_spiele_pro_runde, doppelkombinationen, maximal_zweifache_gegner, n, plaetze, spieler_spiele_anzahl_array, spieler_spiele_anzahl_array_herren, spieler_spiele_anzahl_array_damen, spielplan, spielplan_rest, spielplan_string, tabellenzeilen, startzeit, spielzeit, pausenzeit, zeit;
+
+    let alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F"];
+
+    let spieler = [];
+    let partner_spieler = [];
+    let gegner_spieler = [];
+    let anzahl_spiele_spieler = [];
+    let runde = [];
+    let next_player = [];
+
+
+    function findPartner(player, str) { // von ChatGPT
+        // Create an array of teams by splitting the string with " - " as the delimiter
+        const teams = str.split(" - ");
+
+        // Find the team that contains the player and split it into its individual players
+        const players = teams.find(team => team.includes(player)).split("/");
+
+        // Find the partner of the player in each team and return them as an array
+        return players.filter(p => p !== player);
+    }
+
+    function findOpponents(player, str) { // von ChatGPT
+        // Create an array of teams by splitting the string with " - " as the delimiter
+        const teams = str.split(" - ");
+
+        // Find the team that contains the player and split it into its individual players
+        const players = teams.find(team => team.includes(player)).split("/");
+
+        // Find the opponents of the player in each team and return them as an array
+        const opponents = teams.filter(team => !team.includes(player)).map(team => team.split("/")).reduce((acc, cur) => acc.concat(cur), []);
+
+        return opponents.filter(p => !players.includes(p));
+    }
+
+    function doppelte_partner_vorhanden(arr) { // von ChatGPT; angepasst
+        const map = new Map();
+        for (const item of arr) {
+            if (map.has(item)) {
+                alle_partner_gut = false;
+                return "<span class='rot partner_gegner_analyse'>Ja</span>";
+            } 
+            else {
+                map.set(item, true);
+            }
+        }
+        return "<span class='gruen partner_gegner_analyse'>Nein</span>";
+    }
+
+    function dreifacher_gegner_vorhanden(arr) { // von ChatGPT; angepasst
+        const anzahl_spielerInputs = document.getElementsByClassName("spielerinputs").length;
+
+        for (let j = 1; j<=anzahl_spielerInputs; j++) {
+            let count = 0;
+            for (let i = 0; i < arr.length; i++) {
+                const element = arr[i];
+                if (typeof element === 'string' && element.includes(spieler[j])) {
+                    count++;
+                    if (count >= 3) {
+                        maximal_zweifache_gegner = false;
+                        return "<span class='rot partner_gegner_analyse'>Ja</span>";
+                    }
+                }
+            } 
+        }
+        return "<span class='gruen partner_gegner_analyse'>Nein</span>";
+    }
+
+    function spiele_generieren() {
+        var SA = doppelkombinationen.slice();
+        var m = doppelkombinationen.length;
+        if (m < 0) { // Sinnvoll? Ist m < 0 möglich?
+            m *= -1;
+        }
+        if (m % 2 != 0) {
+            m++;
+            SA.push("Platzhalter");
+        }
+        var HA = SA.slice();
+        spielplan = [];
+        for (i=0; i<=(m-2); i++) {
+            var a = 0;
+            var b = m - 1;
+            for (c=1; c<=(m/2); c++) {
+                spielplan.push(SA[a] + " - " + SA[b]);
+                a++;
+                b--;
+            }
+            SA[1] = HA[m-1];
+            x = 2;
+            for (y=1; y<=(m-1); y++) {
+                SA[x] = HA[y];
+                x++;
+            }
+            HA = SA.slice();
+        }
+    }
+
+    function zufaellig_sortieren(objekt) {
+        // Array 5 Mal zufällig sortieren nach Fisher-Yates-Shuffle
+        for (i=0; i<5; i++) {
+            var sl = objekt.length;
+            while (--sl > 0) {
+                var randIndex = Math.floor(Math.random() * (sl + 1));
+                [objekt[randIndex], objekt[sl]] = [objekt[sl], objekt[randIndex]];
+            }
+        }
+    }
+
+    function inputs_umschalten(art) {
+        let alle_inputs_anzahl = document.getElementsByTagName("input").length;
+        for (i=0; i<alle_inputs_anzahl; i++) {
+            document.getElementsByTagName("input")[i].disabled = art;
+        }
+        document.getElementById("spieler_button").disabled = art;
+        document.getElementById("erstellen_button").disabled = art;
+        
+        if (art == true) {
+            document.getElementById("reaktivieren_button").style.visibility = "visible";
+        }
+        else {
+            document.getElementById("reaktivieren_button").style.visibility = "hidden";
+        }
+    }
+
+    function spiele_wieder_array() {
+        // den String wieder zum Array machen, nur dass diesmal die Namen drin stehen statt den Anfangszahlen
+        spielplan = spielplan_string.split("\n");
+    }
+
+    function rundenvorbereitung(art) {
+        spielplan_rest = spielplan.slice();
+
+        console.clear()
+
+        anzahl_spiele_pro_runde = plaetze;
+        tabellenzeilen = "";
+
+        // Je ein Array für alle Runden erstellen
+        anzahl_runden = document.getElementById("eingabe_runden").value;
+
+        if (art == "zusammen") {
+            // für das allererste Spiel das spieler_spiele_anzahl_array definieren
+            spieler_spiele_anzahl_array = [];
+            for (i=n; i>0; i--) {
+                // das Array wird neu zusammengebaut; weil von hinten nach vorne wird "unshift" verwendet
+                spieler_spiele_anzahl_array.unshift({spieler: spieler[i], anzahl_spiele: anzahl_spiele_spieler[i]});
+            }
+
+            zufaellig_sortieren(spieler_spiele_anzahl_array);
+
+            console.log("Diese Spieler werden für das allererste Spiel einbezogen: ");
+            console.log(spieler_spiele_anzahl_array);
+        }
+        else if (art == "mixed") {
+            // für Herren & Damen eigene Spielerarrays
+            // für das allererste Spiel die spieler_spiele_anzahl_arrays definieren
+            spieler_spiele_anzahl_array_herren = [];
+            spieler_spiele_anzahl_array_damen = [];
+            for (i=n; i>0; i--) {
+                spieler_spiele_anzahl_array_herren.unshift({spieler: spieler[i], anzahl_spiele: anzahl_spiele_spieler[i]});
+            }
+            for (i=(2*n); i>n; i--) {
+                spieler_spiele_anzahl_array_damen.unshift({spieler: spieler[i], anzahl_spiele: anzahl_spiele_spieler[i]});
+            }
+
+            zufaellig_sortieren(spieler_spiele_anzahl_array_herren);
+            zufaellig_sortieren(spieler_spiele_anzahl_array_damen);
+
+            console.log("Diese Spieler werden für das allererste Spiel einbezogen: ");
+            console.log(spieler_spiele_anzahl_array_herren);
+            console.log(spieler_spiele_anzahl_array_damen);
+        }        
+
+        // Zeit vorbereiten
+        startzeit = document.getElementById("startzeit").value;
+        spielzeit = document.getElementById("spielzeit").value;
+        pausenzeit = document.getElementById("pausenzeit").value;
+        halbzeit = document.getElementById("halbzeit").value;
+    }
+
+    function spieler_bestimmen(art) {
+        if (art == "zusammen") {
+            // die Spieler für das nächste Spiel werden festgelegt
+            if (x == 1) { // wenn allererstes Spiel der Runde:
+                next_player[1] = spieler_spiele_anzahl_array[0].spieler;
+                next_player[2] = spieler_spiele_anzahl_array[1].spieler;
+                next_player[3] = spieler_spiele_anzahl_array[2].spieler;
+                next_player[4] = spieler_spiele_anzahl_array[3].spieler;
+            }
+            else { // wenn eines der nachfolgenden Spiele der Runde:
+                for(z=1, y=0; z<=4; z++) {
+                    next_player[z] = spieler_spiele_anzahl_array[y].spieler;
+                
+                    // Ein Spieler soll nicht 2 Mal pro Runde spielen:
+                    var aktuelle_rundenlaenge = runde[r].length;
+                    for (w=0; w<aktuelle_rundenlaenge; w++) { // jedes Spiel der Runde durchgehen
+                        do {  // so lange pro Spielersuche nach doppelten Auftritten, bis der doppelte Auftritt beseitigt ist (do...while)
+                            if (runde[r][w].includes(next_player[z])) {
+                                var spieler_alt = next_player[z];
+                                y++;
+                                next_player[z] = spieler_spiele_anzahl_array[y].spieler;
+                                var spieler_neu = next_player[z];
+                                console.log('%c       Spieler ' + spieler_alt + ' --> ' + spieler_neu + '       ', 'background-color: yellow; color: black');
+                                
+                                w = 0;    // damit er nach der Neuzuweisung wieder alle Spiele der Runde von vorne kontrolliert
+                                //console.log('%c        Es geht bei Spiel Nr. ' + (w+1) + ' weiter, es soll Spieler ' + spieler_neu + ' kontrolliert werden           ', 'background-color: yellow; color: black');
+                                
+                            }
+                        }
+                        while (runde[r][w].includes(next_player[z]));
+                    }
+                    y++;
+                }
+            }    
+        }
+        else if (art == "mixed") {
+            // die Spieler für das nächste Spiel werden festgelegt
+            if (x == 1) { // wenn allererstes Spiel der Runde:
+                next_player[1] = spieler_spiele_anzahl_array_herren[0].spieler;
+                next_player[2] = spieler_spiele_anzahl_array_herren[1].spieler;
+                next_player[3] = spieler_spiele_anzahl_array_damen[0].spieler;
+                next_player[4] = spieler_spiele_anzahl_array_damen[1].spieler;
+            }
+            else { // wenn eines der nachfolgenden Spiele der Runde:
+                // die Herren-Spieler für das nächste Spiel werden festgelegt
+                for(z=1, y=0; z<=2; z++) {
+                    next_player[z] = spieler_spiele_anzahl_array_herren[y].spieler;
+                    
+                    var aktuelle_rundenlaenge = runde[r].length;
+                    for (w=0; w<aktuelle_rundenlaenge; w++) {
+                        do {  // so lange pro Spielersuche nach doppelten Auftritten suchen, bis der doppelte Auftritt beseitigt ist (do...while)
+                            if (runde[r][w].includes(next_player[z])) {
+                                var spieler_alt = next_player[z];
+                                y++;
+                                next_player[z] = spieler_spiele_anzahl_array_herren[y].spieler;
+                                var spieler_neu = next_player[z];
+                                console.log('%c                Spieler ' + spieler_alt + ' --> ' + spieler_neu + '                   ', 'background-color: yellow; color: black');
+                                w = 0;    // damit er nach der Neuzuweisung wieder alle Spiele der Runde von vorne kontrolliert
+                                //console.log('%c        Es geht bei Spiel Nr. ' + (w+1) + ' weiter, es soll Spieler ' + spieler_neu + ' kontrolliert werden           ', 'background-color: yellow; color: black');
+                            }
+                        }
+                        while (runde[r][w].includes(next_player[z]));
+                    }
+                    y++;
+                }
+                // die Damen-Spieler für das nächste Spiel werden festgelegt
+                for(z=3, y=0; z<=4; z++) {
+                    next_player[z] = spieler_spiele_anzahl_array_damen[y].spieler;
+                    
+                    var aktuelle_rundenlaenge = runde[r].length;
+                    for (w=0; w<aktuelle_rundenlaenge; w++) {
+                        do {  // so lange pro Spielersuche nach doppelten Auftritten suchen, bis der doppelte Auftritt beseitigt ist (do...while)
+                            if (runde[r][w].includes(next_player[z])) {
+                                var spieler_alt = next_player[z];
+                                y++;
+                                next_player[z] = spieler_spiele_anzahl_array_damen[y].spieler;
+                                var spieler_neu = next_player[z];
+                                console.log('%c                Spieler ' + spieler_alt + ' --> ' + spieler_neu + '                   ', 'background-color: yellow; color: black');
+                                w = 0;    // damit er nach der Neuzuweisung wieder alle Spiele der Runde von vorne kontrolliert
+                                //console.log('%c        Es geht bei Spiel Nr. ' + (w+1) + ' weiter, es soll Spieler ' + spieler_neu + ' kontrolliert werden           ', 'background-color: yellow; color: black');
+                            }
+                        }
+                        while (runde[r][w].includes(next_player[z]));
+                    }
+                    y++
+                }
+            }
+        }
+        console.log("Nächste Spieler: " + next_player[1] + ", " + next_player[2] + ", " + next_player[3] + ", " + next_player[4]);
+    }
+
+    function passendes_spiel_finden_und_speichern(anzahl) {
+        // das passende Spiel im restlichen Spielplan finden, in dem die 4 Spieler mit den wenigsten Spielen vorkommen und auf Partner kontrollieren
+        var continueOuterLoop = false; // mithilfe von ChatGPT gelöst
+        for (u=0; u<spielplan_rest.length; u++) {
+            if (spielplan_rest[u].includes(next_player[1]) && spielplan_rest[u].includes(next_player[2]) && spielplan_rest[u].includes(next_player[3]) && spielplan_rest[u].includes(next_player[4])) { // wenn das Spiel alle Spieler enthält
+                console.log("Spielvorschlag: " + spielplan_rest[u] + " (Matchindex " + u + " von " + spielplan_rest.length + ")");
+                if (x > 1 || r > 1) { // immer außer beim allerersten Spiel auf Partner prüfen, da es dort noch keine gibt
+                    var aktueller_partner_spieler = [];
+                    OuterLoop: for (t=1; t<=4; t++) { // alle Spieler des Spiels durchgehen
+                        aktueller_partner_spieler[t] = findPartner(next_player[t], spielplan_rest[u]).toString();
+                        console.log("Partner von " + next_player[t] + ": " + aktueller_partner_spieler[t]);
+
+                        for (p=anzahl; p>0; p--) { // das richtige partner_spieler-Array finden für next_player
+                            if (document.getElementById("spieler" + p).value == next_player[t]) {
+                                if (partner_spieler[p].includes(aktueller_partner_spieler[t])) { // wenn der Partner bereits vorkommt
+                                    console.log('%c     Partner von ' + next_player[t] + ' kommt bereits vor: ' + partner_spieler[p] + '     ', 'background-color: orange; color: black');
+                                    continueOuterLoop = true;
+                                    break OuterLoop; // damit nicht alle Partner/Spieler angezeigt werden, sobald einer schon vorkommt
+                                }  
+                            }
+                        }
+                    }
+                }
+                var next_match = spielplan_rest[u];
+                // wenn der Partner schon existiert, ist continueOuterLoop true, also ist das !continueOuterLoop falsch, d.h. es wird NICHT gebreakt
+                // wenn der Partner zum ersten Mal da ist, ist continueOuterLoop falsch, also wird gebreakt
+                if (!continueOuterLoop) {
+                    break; 
+                }
+                
+                else {
+                    continueOuterLoop = false;
+                }
+            }
+        }
+
+        runde[r].push(next_match);
+        var next_match_index = spielplan_rest.indexOf(next_match);
+        spielplan_rest.splice(next_match_index, 1);
+        
+        console.log("Nächstes Match: " + next_match);
+        console.log("Rundenspielplan: " + runde[r]);        
+    }
+
+    function vorheriges_spiel_auswerten(art, anzahl) {
+        // Spieler des letzten Spieles bestimmen, deren Spielanzahl um 1 erhöhen und alle Spieler samt deren Spielanzahl in ein Objekt-Array packen
+        spieler_spiele_anzahl_array = [];
+        spieler_spiele_anzahl_array_herren = [];
+        spieler_spiele_anzahl_array_damen = [];
+
+        for (i=anzahl; i>0; i--) {
+            // wenn das letzte Spiel in der bestimmten Runde spieleri enthält, dann erhöhe anzahl_spiele_spieleri um 1 und finde dessen Partner+Gegner heraus
+            if (runde[r][runde[r].length-1].includes(spieler[i])) {
+                anzahl_spiele_spieler[i]++;
+                partner_spieler[i] = partner_spieler[i].concat(findPartner(spieler[i],runde[r][runde[r].length-1]));
+                gegner_spieler[i].push(findOpponents(spieler[i],runde[r][runde[r].length-1]).join('/'));
+            }
+        }
+
+        if (art == "zusammen") {
+            // das Array wird neu zusammengebaut; weil von hinten nach vorne wird "unshift" verwendet
+            for (i=n; i>0; i--) {
+                spieler_spiele_anzahl_array.unshift({spieler: spieler[i], anzahl_spiele: anzahl_spiele_spieler[i]});
+            }
+
+            // das Array der Spieler mit den jeweiligen Anzahlen der Spielen wird nach der Spielanzahl sortiert (damit später die Paarungen mit den wenigsten Spielen gefunden werden können)
+            spieler_spiele_anzahl_array.sort(function(obj1, obj2) {
+                return obj1.anzahl_spiele - obj2.anzahl_spiele;
+            });
+
+            // das Array wird in kleinere Arrays mit denselben Spielanzahlen gesplittet, damit diese zufällig sortiert werden. Sie werden zum Schluss wieder zu einem einzigen Array zusammengeführt. Sinn: Es ist nicht alphabetisch.
+            ssaa_gemischt = [];
+            var ssaa = [];
+            for (p=0; p<=r; p++) {
+                ssaa[p] = spieler_spiele_anzahl_array.filter(splitten);
+
+                function splitten(element) {
+                    return element.anzahl_spiele == p;
+                };
+
+                // 5 Mal nach Fisher-Yates shufflen
+                for (q=0; q<5; q++) {
+                    var sl = ssaa[p].length;
+                    while (--sl > 0) {
+                        var randIndex = Math.floor(Math.random() * (sl + 1));
+                        [ssaa[p][randIndex], ssaa[p][sl]] = [ssaa[p][sl], ssaa[p][randIndex]];
+                    }
+                }
+                
+                ssaa_gemischt = ssaa_gemischt.concat(ssaa[p]);
+            }
+            spieler_spiele_anzahl_array = ssaa_gemischt.slice();
+
+            console.log("Anzahl der Spiele pro Spieler nach Rundenende: ");
+            console.log(spieler_spiele_anzahl_array);
+            console.log(" \n \n \n");
+        }
+        else if (art == "mixed") {
+            // das Array wird neu zusammengebaut; weil von hinten nach vorne wird "unshift" verwendet; für Herren & Damen eigene Spielerarrays
+            for (i=n; i>0; i--) {
+                spieler_spiele_anzahl_array_herren.unshift({spieler: spieler[i], anzahl_spiele: anzahl_spiele_spieler[i]});
+            }
+            for (i=(2*n); i>n; i--) {
+                spieler_spiele_anzahl_array_damen.unshift({spieler: spieler[i], anzahl_spiele: anzahl_spiele_spieler[i]});
+            }
+
+            // das Array der Spieler mit den jeweiligen Anzahlen der Spielen wird nach der Spielanzahl sortiert (damit später die Paarungen mit den wenigsten Spielen gefunden werden können)
+            spieler_spiele_anzahl_array_herren.sort(function(obj1, obj2) {
+                return obj1.anzahl_spiele - obj2.anzahl_spiele;
+            });
+            spieler_spiele_anzahl_array_damen.sort(function(obj1, obj2) {
+                return obj1.anzahl_spiele - obj2.anzahl_spiele;
+            });
+
+            // das Array wird in kleinere Arrays mit den selben  Spielanzahlen gesplittet, damit diese zufällig sortiert werden. Sie werden zum Schluss wieder zu einem einzigen Array zusammengeführt. Sinn: Es ist nicht unbedingt alphabetisch
+            ssaa_herren_gemischt = [];
+            var ssaa_herren = [];
+            for (p=0; p<=r; p++) {
+                ssaa_herren[p] = spieler_spiele_anzahl_array_herren.filter(splitten);
+
+                function splitten(element) {
+                    return element.anzahl_spiele == p;
+                };
+
+                // 5 Mal nach Fisher-Yates shufflen
+                for (q=0; q<5; q++) {
+                    var sl = ssaa_herren[p].length;
+                    while (--sl > 0) {
+                        var randIndex = Math.floor(Math.random() * (sl + 1));
+                        [ssaa_herren[p][randIndex], ssaa_herren[p][sl]] = [ssaa_herren[p][sl], ssaa_herren[p][randIndex]];
+                    }
+                }
+
+                ssaa_herren_gemischt = ssaa_herren_gemischt.concat(ssaa_herren[p]);
+            }
+            spieler_spiele_anzahl_array_herren = ssaa_herren_gemischt.slice();
+
+            // und für die Damen auch
+            ssaa_damen_gemischt = [];
+            var ssaa_damen = [];
+            for (p=0; p<=r; p++) {
+                ssaa_damen[p] = spieler_spiele_anzahl_array_damen.filter(splitten);
+
+                function splitten(element) {
+                    return element.anzahl_spiele == p;
+                };
+
+                // 5 Mal nach Fisher-Yates shufflen
+                for (q=0; q<5; q++) {
+                    var sl = ssaa_damen[p].length;
+                    while (--sl > 0) {
+                        var randIndex = Math.floor(Math.random() * (sl + 1));
+                        [ssaa_damen[p][randIndex], ssaa_damen[p][sl]] = [ssaa_damen[p][sl], ssaa_damen[p][randIndex]];
+                    }
+                }
+
+                ssaa_damen_gemischt = ssaa_damen_gemischt.concat(ssaa_damen[p]);
+            }
+            spieler_spiele_anzahl_array_damen = ssaa_damen_gemischt.slice();
+
+            console.log("Anzahl der Spiele pro Spieler nach Rundenende: ");
+            console.log(spieler_spiele_anzahl_array_herren);
+            console.log(spieler_spiele_anzahl_array_damen);
+            console.log(" \n \n \n");
+        }
+    }
+
+    function spielplan_ausgeben() {
+        var spielplan_layout_neu = "";
+        for (h=1; h<=anzahl_runden; h++) {
+            spielplan_layout_neu += "<p><b>Runde " + h + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + "<span contenteditable='true'>" + zeit_berechnen('mit')  + "</span></b></p>";
+            spielplan_layout_neu += "<table border=1 class='spielplantabellen'><tr class='tabhead'><th class='platzspalte'>Platz</th><th class='spielspalte'>Spiel</th><th class='ergebnisspalte'>Ergebnis</th></tr>";
+
+            for (let j=0; j<(runde[h].length); j++) {
+                spielplan_layout_neu += "<tr><td class='platzspalte'>" + (j+1) + "</td><td class='spielspalte'>" + runde[h][j] + "</td><td class='ergebnisspalte' contenteditable='true'></td></tr>";
+            }
+
+            spielplan_layout_neu += "</table><br>";
+            zeit_ersterunde = false;
+        }
+        document.getElementById("tabellendiv").innerHTML = "<div id='druckbereich'><h2>" + document.getElementById("turniername").value + " &ndash; " + new Date().toLocaleDateString('en-GB').replace(/\//g, '.') + "</h2>" + spielplan_layout_neu; + "</div>";
+
+        document.getElementById("druckbereich").innerHTML += "<p>Ende aller Partien: <span contenteditable='true'>" + zeit_berechnen('ohne') + "</span></p>";
+        document.getElementById("tabellendiv").innerHTML += "<p><button id='drucken' onclick='drucken()'>Tabelle drucken</button></p>";
+
+        // Alle Spielplantabellen gleich breit machen; mithilfe von ChatGPT; angepasst
+        let widestTable = 0;
+        let tables = document.querySelectorAll('.spielspalte');
+        tables.forEach(table => {
+            let width = table.offsetWidth;
+            if (width > widestTable) {
+                widestTable = width;
+            }
+        });
+        tables.forEach(table => {
+            table.style.width = widestTable + "px";
+        });
+    }
+
+    function partner_gegner_ausgeben(anzahl) {
+        // Partner und Gegner pro Spieler ausgeben
+        var spiele_spieler_div = "";
+        var alle_spieler_spiele_anzahlen = [];
+        for (i=1; i<=anzahl; i++) {
+            spiele_spieler_div += "<tr><td>" + spieler[i] + "</td><td>" + anzahl_spiele_spieler[i] + "</td><td>" + partner_spieler[i] + "</td><td>" + doppelte_partner_vorhanden(partner_spieler[i]) + "</td><td>" + gegner_spieler[i] + "</td><td>" + dreifacher_gegner_vorhanden(gegner_spieler[i]) + "</td>" + "</tr>";
+            alle_spieler_spiele_anzahlen.push(anzahl_spiele_spieler[i]);
+        }
+        document.getElementById("analysediv").innerHTML = "<h3>Auswertung der Spiele pro Spieler: </h3><table border=0 id='auswertungstabelle'><tr><th>Spieler</th><th>Anzahl der Spiele</th><th>Partner</th><th>Doppelte Partner</th><th>Gegner</th><th>Dreifache Gegner</th></tr>" + spiele_spieler_div + "</table>";
+
+        // Auf gleich viele Spiele bei jedem Spieler prüfen
+        var gleich;
+        const areAllElementsEqual = arr => arr.every(element => element === arr[0]);
+        if (areAllElementsEqual(alle_spieler_spiele_anzahlen)) {
+            gleich = "<br><span class='gruen spiele_analyse'>Alle haben gleich viele Spiele!</span>";
+        }
+        else {
+            gleich = "<br><span class='rot spiele_analyse'>Nicht alle haben gleich viele Spiele!</span>";
+        }
+
+        document.getElementById("analysediv").innerHTML += gleich;
+    }
+
+    function zeit_berechnen(pause_mit_ohne) {
+        var stunden, minuten;
+        if (h == 1) {
+            // Startzeit-Objekt erstellen
+            zeit = new Date();
+            zeit.setHours(startzeit.substring(0,2));
+            zeit.setMinutes(startzeit.substring(3,5));
+        }
+        else {
+            var halbzeit_wert = 0;
+            if (h == Math.ceil(anzahl_runden/2) + 1) {
+                halbzeit_wert = halbzeit;
+            }
+
+            if (pause_mit_ohne == "ohne") {
+                pausenzeit = 0;
+            }
+
+            // Minuten dazuaddieren und formatieren
+            zeit.setMinutes(zeit.getMinutes() + parseInt(spielzeit) + parseInt(pausenzeit) + parseInt(halbzeit_wert));
+            var stunden = ('0' + zeit.getHours()).slice(-2);
+            var minuten = ('0' + zeit.getMinutes()).slice(-2);
+
+            zeit.setHours(stunden);
+            zeit.setMinutes(minuten);
+        }
+        stunden = ('0' + zeit.getHours()).slice(-2);
+        minuten = ('0' + zeit.getMinutes()).slice(-2);
+
+
+        // neue Zeit ausgeben
+        return stunden + "." + minuten + " Uhr";
+    }
+
+    function vorschau() { // von ChatGPT; angepasst
+        // für Endzeit
+        // Get input values
+        const startTimeInput = document.getElementById("startzeit").value;
+        const spielzeitInput = parseInt(document.getElementById("spielzeit").value);
+        const pausenzeitInput = parseInt(document.getElementById("pausenzeit").value);
+        const halbzeitInput = parseInt(document.getElementById("halbzeit").value);
+        const rundenInput = document.getElementById("eingabe_runden").value;
+
+        // Convert start time input to minutes
+        let startTimeParts = startTimeInput.split(":");
+        let startTimeInMinutes = parseInt(startTimeParts[0]) * 60 + parseInt(startTimeParts[1]);
+
+        // Calculate sum
+        let totalMinutes = startTimeInMinutes + rundenInput*spielzeitInput + (rundenInput-1)*pausenzeitInput + halbzeitInput;
+
+        // Convert total minutes to hours and minutes
+        let hours = Math.floor(totalMinutes / 60);
+        let minutes = totalMinutes % 60;
+
+        // Format the result as HH:MM
+        let formattedTime = ("0" + hours).slice(-2) + "." + ("0" + minutes).slice(-2) + " Uhr";
+
+        // Set the result in the output element
+        document.getElementById("endzeit").innerHTML = "<u>Endzeit:</u> " + formattedTime;
+
+
+        // für Anzahl der Spiele pro Spieler
+        const plaetzeInput = document.getElementById("eingabe_plaetze").value;
+        const spielerInput = document.getElementById("eingabe_spieler").value;
+        const mixedInput = document.getElementById("mixed").checked;
+        let koeffizient = 1;
+
+        if (mixedInput == true) {
+            koeffizient = 2;
+        } 
+
+        let sps = (4*plaetzeInput*rundenInput)/(koeffizient*spielerInput);
+
+        document.getElementById("spiele_pro_spieler").innerHTML = "<u>Spiele pro Spieler:</u> " + sps.toFixed(1);
+    }
+
+    function spiele_pro_spieler_helfer() {
+        const max_spieler = document.getElementById("eingabe_spieler").value;
+        const max_plaetze = document.getElementById("eingabe_plaetze").value;
+        const mixedInput = document.getElementById("mixed").checked;
+
+        let koeffizient = 1;
+        if (mixedInput == true) {koeffizient = 2;} 
+
+        let ergebnis = "";
+        let sps;
+        // Durch Runden, Plätze, Spieler durchiterieren, eine gerade Anzahl an Spielen pro Spielern herauskommt
+        for (let s=max_spieler; s>=(max_spieler-3); s--) { // Spieler
+            for (let p=max_plaetze; p>=2; p--) { // Plätze              
+                for (let r=4; r<=30; r++) { // Runden
+                    sps = (4*p*r)/(koeffizient*s);
+                    if (sps % 1 == 0 && sps >= 2 && sps <= 10) {
+                        ergebnis += sps + " = " + s + " Spieler, " + p + " Plätze, " + r + " Runden" + "\n";
+                    }
+                }
+            }
+        }
+        alert(ergebnis);
+    }
+
+    function erstellen_zusammen() {
+        console.clear();
+
+        // Doppelkombinationen erstellen Anfang
+        var SA = [];
+        n = document.getElementById("eingabe_spieler").value;
+
+        plaetze = document.getElementById("eingabe_plaetze").value;
+        if (plaetze > Math.floor(n/4)) {
+            alert("Warnung: \nZu wenige Plätze ausgewählt! \n(Pro 4 Spieler 1 Platz)");
+            return;
+        }
+
+        if (n < 0) {
+            n *= -1;
+        }
+        if (n % 2 != 0) {
+            var ungerade = true;
+            n++;
+        }
+        for (i=1; i<=n; i++) {
+           var z = parseInt(i);
+            SA.push(z);
+        }
+        var HA = SA.slice();
+        // Sa und HA sind Arrays mit den Elementen 1 bis anzahl_spieler
+
+        doppelkombinationen = [];
+        for (i=0; i<=(n-2); i++) {
+            var a = 0;
+            var b = n - 1;
+            for (c=1; c<=(n/2); c++) {
+                doppelkombinationen.push(String(SA[a]) + "/" + String(SA[b]));
+                a++;
+                b--;
+            }
+            SA[1] = HA[n-1];
+            x = 2;
+            for (y=1; y<=(n-1); y++) {
+                SA[x] = HA[y];
+                x++;
+            }
+            HA = SA.slice();
+        }
+        // doppelkombinatonen ist ein Array, das alle möglichen Kombinationen enthält (Formel: n*(n-1)/2; z.B. 1/2, 3/4, 1/4, 2/3, usw...)
+        // Doppelkombinationen erstellen Ende
+        // --------------------------------------------------
+        // Spielplan erstellen Anfang
+        spiele_generieren();
+        // das Array spielplan besteht aus allen möglichen Spielen, z.B. 1/8 - 3/6, 2/5 - 4/7 etc.
+        // Spielplan erstellen Ende
+
+        // Spiele mit Platzhalter wenn ungerade entfernen
+        spielplan = spielplan.filter(a => !a.includes("Platzhalter"));
+        if (ungerade == true) {
+            spielplan = spielplan.filter(a => !a.includes(n));
+        }
+
+        // aus dem Spielplan-Array einen String erstellen, in diesem die Zahlen durch Buchstaben ersetzen, damit es zu keinen Problemen bei der Doppelzahlelement-Entfernung kommt (1, 10, 11 etc.)
+        spielplan_string = spielplan.join("\n");
+        if (ungerade == true) {
+            n--;
+        }
+        for (i=n; i>0; i--) { // minus statt plus weil sonst 1 den 10er ersetzt
+            spielplan_string = spielplan_string.replace(new RegExp(i, "g"), alphabet[i-1]);
+        }
+        if (ungerade == true) {
+            n++;
+        }
+        spielplan = spielplan_string.split("\n");
+        // fertig; später werden die Buchstaben wieder zu Zahlen umgeändert
+
+        var doppelzahlelemente = [];
+        for (i=1; i<=n; i++) {
+            // Array mit den Elementen mit doppelten Zahlen erstellen (z.B. "1/3 - 3/4" bzw. "a/c - c/d")
+            spielplan.forEach(function (spiel, index) {
+                if (spiel.split(String(alphabet[i-1])).length-1 >= 2) {
+                    doppelzahlelemente.push(spielplan[index]);
+                }
+            });       
+        }
+
+        //Elemente mit doppelten Zahlen aus Spielplan-Array entfernen
+        spielplan = spielplan.filter(function(element) {
+            return !doppelzahlelemente.includes(element);
+        });
+
+        // die Buchstaben wieder zu Zahlen umändern, damit es später bei den Ersetzungen durch die Namen nicht zu Fehlern kommt
+        spielplan_string = spielplan.join("\n");
+        if (ungerade == true) {
+            n--;
+        }
+        for (i=n; i>0; i--) { // minus statt plus weil sonst 1 den 10er ersetzt
+            spielplan_string = spielplan_string.replace(new RegExp(alphabet[i-1], "g"), i);
+        }
+        if (ungerade == true) {
+            n++;
+        }
+        spielplan = spielplan_string.split("\n");
+        // jetzt ist alles wieder so als wenn die Zahlen nie zu Buchstaben geändert worden wären
+
+        zufaellig_sortieren(spielplan);     
+
+        // im Ausgabe-String die Zahlen durch Namen ersetzen
+        spielplan_string = spielplan.join("\n");
+        spieler1 = document.getElementById("spieler1").value;
+        if (spieler1 == "") {
+            alert("Bitte Spielernamen eintragen!");
+            return;
+        }    
+        if (ungerade == true) {
+            n--;
+        }
+        for (i=n; i>0; i--) { // minus statt plus weil sonst 1 den 10er ersetzt
+            spieler[i] = document.getElementById("spieler" + i).value;
+            partner_spieler[i] = [];
+            gegner_spieler[i] = [];
+            anzahl_spiele_spieler[i] = 0; // brauchen wir später für die Rundenerstellung
+            spielplan_string = spielplan_string.replace(new RegExp(i, "g"), spieler[i]);
+        }
+
+        spiele_wieder_array();
+        
+        // Jetzt werden die Runden erstellt
+        rundenvorbereitung("zusammen");
+
+        for (r=1; r<=anzahl_runden; r++) {
+            runde[r] = [];
+
+            // Spiele pro Runde generieren
+            for (x=1; x<=anzahl_spiele_pro_runde; x++) {
+                console.log("\n" + x + ". Spiel / Runde " + r + ": \n ");
+                spieler_bestimmen("zusammen");
+                passendes_spiel_finden_und_speichern(n);
+                vorheriges_spiel_auswerten("zusammen", n);
+            }
+        }
+    }
+
+    function erstellen_mixed() {
+        console.clear();
+
+        // Doppelkombinationen erstellen Anfang
+        var SA = [];
+        n = document.getElementById("eingabe_spieler").value;
+
+        plaetze = document.getElementById("eingabe_plaetze").value;
+        if (plaetze > Math.floor(n/2)) {
+            alert("Warnung: \nZu wenige Plätze ausgewählt! \n(Pro 2 Spieler 1 Platz)");
+            return;
+        }
+        
+        doppelkombinationen = [];
+
+        // alle Herren/Damen-Kombinationen erstellen und daraus Array erstellen, mit dem dann der Spielplan erstellt wird
+        for (i=1, wh=0; i<=n; i++, wh++) {
+            for (u=(n-0+i-wh); u<=(2*n); u++) {
+                doppelkombinationen.push(u + "/" + i);
+            }
+        }
+        // Doppelkombinationen erstellen Ende
+        // --------------------------------------------------
+        // Spielplan erstellen Anfang
+        spiele_generieren();
+        // das Array spielplan besteht aus allen möglichen Spielen, z.B. 1/8 - 3/6, 2/5 - 4/7 etc.
+        // Spielplan erstellen Ende
+
+        // aus dem Spielplan-Array einen String erstellen, in diesem die Zahlen durch Buchstaben ersetzen, damit es zu keinen Problemen bei der Doppelzahlelement-Entfernung kommt (1, 10, 11 etc.)
+        spielplan_string = spielplan.join("\n");
+        for (i=(2*n); i>0; i--) { // minus statt plus weil sonst 1 den 10er ersetzt
+            spielplan_string = spielplan_string.replace(new RegExp(i, "g"), alphabet[i-1]);
+        }
+        spielplan = spielplan_string.split("\n");
+        // fertig; später werden die Buchstaben wieder zu Zahlen umgeändert
+
+        var doppelzahlelemente = [];
+        for (i=1; i<=(2*n); i++) {
+            // Array mit den Elementen mit doppelten Zahlen erstellen (z.B. "1/3 - 3/4" bzw. "a/c - c/d")
+            spielplan.forEach(function (spiel, index) {
+                if (spiel.split(String(alphabet[i-1])).length-1 >= 2) {
+                    doppelzahlelemente.push(spielplan[index]);
+                }
+            });       
+        }
+
+        //Elemente mit doppelten Zahlen aus Spielplan-Array entfernen
+        spielplan = spielplan.filter(function(element) {
+            return !doppelzahlelemente.includes(element);
+        });
+
+        // die Buchstaben wieder zu Zahlen umändern, damit es später bei den Ersetzungen durch die Namen nicht zu Fehlern kommt
+        spielplan_string = spielplan.join("\n");
+        for (i=(2*n); i>0; i--) { // minus statt plus weil sonst 1 den 10er ersetzt
+            spielplan_string = spielplan_string.replace(new RegExp(alphabet[i-1], "g"), i);
+        }
+        spielplan = spielplan_string.split("\n");
+        // jetzt ist alles wieder so als wenn die Zahlen nie zu Buchstaben geändert wurden
+
+        zufaellig_sortieren(spielplan);   
+
+        // im Ausgabe-String die Zahlen durch Namen ersetzen
+        spielplan_string = spielplan.join("\n");
+        spieler1 = document.getElementById("spieler1").value;
+        if (spieler1 == "") {
+            alert("Bitte Spielernamen eintragen!");
+            return;
+        }
+        for (i=(2*n); i>0; i--) { // minus statt plus weil sonst 1 den 10er ersetzt
+            spieler[i] = document.getElementById("spieler" + i).value;
+            partner_spieler[i] = [];
+            gegner_spieler[i] = [];
+            anzahl_spiele_spieler[i] = 0; // brauchen wir später für die Rundenerstellung
+            spielplan_string = spielplan_string.replace(new RegExp(i, "g"), spieler[i]);
+        }
+
+        spiele_wieder_array();
+           
+        // Jetzt werden die Runden erstellt
+        rundenvorbereitung("mixed");
+
+        for (r=1; r<=anzahl_runden; r++) {
+            runde[r] = [];
+
+            for (x=1; x<=anzahl_spiele_pro_runde; x++) {
+                console.log("\n" + x + ". Spiel / Runde " + r + ": \n ");
+                spieler_bestimmen("mixed");
+                passendes_spiel_finden_und_speichern(2*n);
+                vorheriges_spiel_auswerten("mixed", 2*n);
+            }
+        }
+    }
+
+    function erstellen() {
+        var generationen = 0;
+        inputs_umschalten(true);
+        var anfangszeit = performance.now()
+        var dauer;
+        
+        document.getElementById("analysediv").innerHTML = "";
+        document.getElementById("tabellendiv").innerHTML = "";
+        document.getElementById("tabellendiv").innerHTML = "<div id='ladekreis'></div>";
+        setTimeout(function() {
+            do {
+                try {
+                    alle_partner_gut = true;
+                    maximal_zweifache_gegner = true;
+                    if (document.getElementById("mixed").checked) {
+                        erstellen_mixed();
+                        var zahl_fuer_partner_gegner_ausgabe = 2*n;
+                    }
+                    else {
+                        erstellen_zusammen();
+                        var zahl_fuer_partner_gegner_ausgabe = n;
+                    }
+                    spielplan_ausgeben();
+                    partner_gegner_ausgeben(zahl_fuer_partner_gegner_ausgabe);
+                    generationen++;
+
+                    dauer = performance.now() - anfangszeit;
+                    if (dauer >= 120000) {
+                        break;
+                    }
+                }
+                catch(err) {
+                    console.log(err);
+                    document.getElementById("tabellendiv").innerHTML = "<div style='width: 400px; background-color: yellow; font-weight: bold; padding: 20px; border-radius: 10px;'>Ein FEHLER ist aufgetreten. Bitte alle Eingaben überprüfen und noch einmal versuchen. Wenn das Problem weiterhin auftritt, bitte an den Ersteller (Michael) wenden.</div>"
+                } 
+            }
+            while (alle_partner_gut == false || maximal_zweifache_gegner == false);
+
+            console.log(generationen + " Versuche wurden benötigt.\n" + Math.round(dauer/1000) + " Sekunden sind vergangen.");
+        }, 0);
+    }
+
+    let alte_spielernamen = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
+    let alte_spielernamen_herren = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
+    let alte_spielernamen_damen = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
+    let davor = "";
+    function spieler_anzeigen() {
+        // Alte Namen speichern und ausgeben
+        let alte_spielerinputanzahl = document.getElementsByClassName("spielerinputs").length;
+        if (document.getElementById("mixed").checked) {
+            if (davor == "mixed") {
+                for (let i=0; i<(alte_spielerinputanzahl/2); i++) {
+                    alte_spielernamen_herren[i] = document.getElementsByClassName("spielerinputs")[(i*2)].value;
+                    alte_spielernamen_damen[i] = document.getElementsByClassName("spielerinputs")[(i*2+1)].value;
+                }
+            }
+        }
+        else {
+            if (davor == "normal") {
+                for (let i=0; i<alte_spielerinputanzahl; i++) {
+                    alte_spielernamen[i] = document.getElementsByClassName("spielerinputs")[i].value;
+                }
+            }
+        }
+
+        document.getElementById("spielernamen").innerHTML = "";
+        var anzahl = document.getElementById("eingabe_spieler").value;
+        var spielerinputs = "";
+        
+        if (document.getElementById("mixed").checked) {
+            if (alte_spielernamen_herren[0] == "") {
+                alte_spielernamen_herren = alphabet.slice(0, (alphabet.length/2));
+                alte_spielernamen_damen = alphabet.slice((alphabet.length/2));
+            }
+            spielerinputs = "<table border=0><tr><th>Herren</th><th>Damen</th></tr>";
+            for (i=1; i<=anzahl; i++) {
+                spielerinputs += "<tr><td>Spieler " + i + ": <input type='text' value='" + alte_spielernamen_herren[i-1] + "' id='spieler" + i + "' class='spielerinputs' onchange='namen_check()'></td><td>Spielerin " + i + ": <input type='text' value='" + alte_spielernamen_damen[i-1] + "' id='spieler" + (anzahl-0+i) + "' class='spielerinputs' onchange='namen_check()'></td></tr>";   // das muss so blöd gelöst werden weil die Zahlen sonst als String zusammengebaut werden...
+            }
+            spielerinputs += "</table>";
+            davor = "mixed";
+        }
+        else {
+            if (alte_spielernamen[0] == "") {
+                alte_spielernamen = alphabet;
+            }
+            for (i=1; i<=anzahl; i++) {
+                spielerinputs += "Spieler " + i + ": <input type='text' value='" + alte_spielernamen[i-1] + "' id='spieler" + i + "' class='spielerinputs' onchange='namen_check()'><br>";
+            }
+            davor = "normal";
+        }
+        
+        document.getElementById("spielernamen").innerHTML = spielerinputs;
+        document.getElementById("erstellen_button").disabled = false;
+
+        namen_check();
+    }
+
+    function namen_check() {
+        let alle_spielerinputs = document.getElementsByClassName("spielerinputs");
+        for (let i=0; i<alle_spielerinputs.length; i++) {
+           alle_spielerinputs[i].style.backgroundColor = "";
+        }
+
+        // Create an array of forbidden strings
+        let forbiddenStrings = ["/", " - "];
+
+        // Iterate over each input field
+        for (let i=0; i<alle_spielerinputs.length; i++) {
+            let inputValue = alle_spielerinputs[i].value;
+
+            // Check if the input value matches any forbidden string
+            for (let u=0; u<forbiddenStrings.length; u++) {
+                if (inputValue.includes(forbiddenStrings[u])) {
+                    alle_spielerinputs[i].style.backgroundColor = "red";
+                }
+            }
+            
+            // Check if the input value matches any other input value with the same class
+            for (let j=0; j<alle_spielerinputs.length; j++) {
+                if (i != j && alle_spielerinputs[j].value.includes(inputValue)) {
+                    alle_spielerinputs[j].style.backgroundColor = "orange";
+                    alle_spielerinputs[i].style.backgroundColor = "orange";
+                }
+            }
+        }
+    }
+
+    function drucken() {
+        var ergebnis_skript = "<script>alert('Damit die Farben gedruckt werden, beim Druckdialog \"Hintergrundgrafiken\" o.Ä. ankreuzen! \\n\\nSofern der Spielplan nicht auf die ganze Seite passt, versuchen die Seite per Druckeinstellungen zu skalieren!');<\/script>";
+
+
+        var design = '<style>body {font-family: sans-serif;} .spielplantabellen {border-collapse: collapse; background-color: white;} th, td {text-align: center; padding: 5px;} .rundenspalte, .spielspalte, .ergebnisspalte {min-width: 120px;} .platzspalte {width: 75px;} /*.spielspalte {padding-left: 30px; padding-right: 30px;}*/ .tabhead {background-color: silver;color: black; font-size: 10pt;} input[type="text"] {width: 10em;}</style>';
+        
+        var printContent = document.getElementById("druckbereich");
+        var WinPrint = window.open();
+        WinPrint.document.write(printContent.innerHTML + design + ergebnis_skript);
+        WinPrint.document.close();
+        WinPrint.focus();
+        WinPrint.print();
+        //WinPrint.close();
+    }
+
+    function modus() {
+        var modus_cb = document.getElementById("mixed");
+        if (modus_cb.checked) {
+            document.getElementById("spieler_label").innerHTML = "Anzahl der Spieler pro Geschlecht (max. 16): ";
+            document.getElementById("eingabe_spieler").setAttribute("max", 16);
+        }
+        else {
+            document.getElementById("spieler_label").innerHTML = "Anzahl der Spieler (max. 32): ";
+            document.getElementById("eingabe_spieler").setAttribute("max", 32);
+        }
+        
+        vorschau()
+    }
+</script>
+    
+    <h1>Spielplangenerator &ndash; Doppelturnier</h1>
+    <div id="eingabediv">
+        <div id="tipps">
+            <b>Tipps und Hinweise: </b>
+            <ul>
+                <li>Man kann die <b>Ergebnisse direkt in die Tabelle eintragen!</b> <br>(Achtung: Wenn die Seite geschlossen wird, gehen die Ergebnisse verloren!)</li>
+                <li>Die Tabelle kann einfach <b>kopiert</b> und in Excel etc. <b>eingefügt werden</b>.</li>
+                <li>Die Uhrzeit eines Spieles in der Tabelle <b>ist bearbeitbar</b>.</li>
+                <li><b>Keine " - " oder "/" im Spielernamen</b> verwenden ("-" ist ok) --> rote Fehlermeldung</li>
+                <li><b>Keine Namen sollen in anderen enthalten sein</b> --> orange Fehlermeldung</li>
+                <li>Es wird <b>2 Minuten lang</b> versucht, einen guten Spielplan zu generieren. Danach wird abgebrochen. Bei Bedarf einfach erneut versuchen.</li>
+                <li>Wenn eine Meldung kommt, dass die <b>Seite nicht reagiert</b>, bitte einfach auf <b>"Warten"</b> klicken und abwarten.</li>
+                <li>Um eine <b>gleiche Anzahl an Spielen pro Spielern</b> zu erreichen: <br>In den Plätze- und Spieler-Eingabefeldern die jeweilige MAXIMALE Anzahl eintragen und danach auf den "Hilfe"-Button unten klicken. Es werden daraufhin Kombinationen angezeigt, mit denen eine gerade Anzahl an Spielern erreicht wird.</li>
+            </ul>
+        </div>
+        <br><br>
+        <label for="turniername">Name des Turniers:</label>
+        <br>
+        <input type="text" id="turniername" placeholder="Mein Turnier">
+        <br><br>
+        <label for="startzeit">Startzeit:</label>
+        <br>
+        <input type="time" value="08:00" id="startzeit" onchange="vorschau()">
+        <br><br>
+        <label for="spielzeit">Dauer eines Spiels (Minuten):</label>
+        <br>
+        <input type="number" min=5 value=25 id="spielzeit" onchange="vorschau()">
+        <br><br>
+        <label for="pausenzeit">Pause (Minuten):</label>
+        <br>
+        <input type="number" min=0 value=5 id="pausenzeit" onchange="vorschau()">
+        <br><br>
+        <label for="halbzeit">Große Pause (Minuten):</label>
+        <br>
+        <input type="number" min=0 value=0 id="halbzeit" onchange="vorschau()">
+        <br>
+        <b><p id="endzeit">Endzeit: </p></b>
+        <b><p id="spiele_pro_spieler">Spiele pro Spieler: </p></b>
+        <label for="eingabe_runden">Anzahl der Runden:</label>
+        <br>
+        <input type="number" min=1 max="32" value=4 id="eingabe_runden" onchange="vorschau()">
+        <br><br>
+        <label for="eingabe_plaetze">Anzahl der Plätze: </label>
+        <br>
+        <input type="number" min=1 value=3 id="eingabe_plaetze" onchange="vorschau()">
+        <br><br>
+        <input type="checkbox" id="mixed" onclick="modus()"><label for="mixed">Mixed-Modus</label>
+        <br><br>
+        <label for="eingabe_spieler" id="spieler_label">Anzahl der Spieler (max. 32): </label>
+        <br>
+        <input type="number" min=4 max=32 value=12 id="eingabe_spieler" onchange="vorschau()">
+        <button onclick="spieler_anzeigen()" id="spieler_button">Auswählen</button>
+        <br>
+        <button onclick="spiele_pro_spieler_helfer()" id="spieleprospieler_button">Hilfe für Spiele pro Spieler (siehe Tipp oben!)</button>
+        <br><br>
+        <div id="spielernamen"></div>
+        <br>
+        <button onclick="erstellen()" id="erstellen_button" disabled>Spielplan erstellen</button>
+        <br><br>
+        <button onclick="inputs_umschalten(false)" id="reaktivieren_button">Eingabefelder reaktivieren</button>
+        <br><br>
+    </div>
+    <div id="tabellendiv"></div>
+    <div id="analysediv"></div>
+
+    <div id="version">
+        <span>Version 1.7.2</span>
+        <br>
+        <span>© Michael Hobel</span>
+    </div>
+
+<script>
+    
+    window.addEventListener('beforeunload', function (e) {
+        e.preventDefault();
+        e.returnValue = '';
+        return "Soll die aktuelle Seite geschlossen oder neu geladen werden? ALLE Daten gehen verloren!";
+    });
+    
+</script>
+</body>
+</html>
