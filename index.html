@@ -1,5 +1,5 @@
 <!--
-Änderung gegenüber v1.7.1: "eval" zu Arrays geändert
+Änderung gegenüber v1.7.2: Generelle kleine Verbesserungen, Anzahl der Spieler von 32 auf 40 aufgestockt, Ergebnisbestimmungs-Modus hinzugefügt
 -->
 
 <!DOCTYPE html>
@@ -21,6 +21,12 @@
             font-size: 12pt;
         }
 
+        .tabhead {
+            background-color: silver;
+            color: black;
+            font-size: 10pt;
+        }
+
         .spielplantabellen {
             border-collapse: collapse;
             background-color: white;
@@ -31,8 +37,11 @@
         }
     
         #drucken {
-            float: right;
             margin-top: -35px;
+        }
+
+        .tabellenbuttons {
+            float: right;
         }
         
         th, td {
@@ -107,12 +116,6 @@
             padding-bottom: 15px;
         }
 
-        .tabhead {
-            background-color: silver;
-            color: black;
-            font-size: 10pt;
-        }
-
         input[type="text"], input[type="number"], input[type="time"] {
             width: 10em;
         }
@@ -155,6 +158,39 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        #ergebnisbestimmungstabelle {
+            border-collapse: collapse;
+            border: 1px solid black;
+        }
+
+        #ergebnisbestimmungstabelle td {
+            padding: 3px;
+            border: none;
+            text-align: initial;
+        }
+
+        #ergebnisbestimmungstabelle input[type="number"] {
+            width: 40px; /* Adjust the width as needed */
+        }
+
+        .unteregrenze {
+            border-bottom: 2px solid black;
+        }
+
+        #ergebnistabelle {
+            border: 1px solid black;
+            border-collapse: collapse;
+            font-size: 13pt;
+        }
+
+        #ergebnistabelle th {
+            font-size: 13pt;
+        }
+
+        .versteckt {
+            display: none;
+        }
     </style>
 </head>
 <body onload="vorschau()">    
@@ -162,15 +198,19 @@
     // manche der später benötigten Variablen werden schon hier definiert
     var alle_partner_gut, anzahl_runden, anzahl_spiele_pro_runde, doppelkombinationen, maximal_zweifache_gegner, n, plaetze, spieler_spiele_anzahl_array, spieler_spiele_anzahl_array_herren, spieler_spiele_anzahl_array_damen, spielplan, spielplan_rest, spielplan_string, tabellenzeilen, startzeit, spielzeit, pausenzeit, zeit;
 
-    let alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F"];
+    let alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"];
 
-    let spieler = [];
-    let partner_spieler = [];
-    let gegner_spieler = [];
-    let anzahl_spiele_spieler = [];
-    let runde = [];
-    let next_player = [];
+    let spieler, partner_spieler, gegner_spieler, anzahl_spiele_spieler, runde, next_player;
+    function zuruecksetzen() {
+        spieler = [];
+        partner_spieler = [];
+        gegner_spieler = [];
+        anzahl_spiele_spieler = [];
+        runde = [];
+        next_player = [];
+    }
 
+    zuruecksetzen();
 
     function findPartner(player, str) { // von ChatGPT
         // Create an array of teams by splitting the string with " - " as the delimiter
@@ -607,7 +647,7 @@
             spielplan_layout_neu += "<table border=1 class='spielplantabellen'><tr class='tabhead'><th class='platzspalte'>Platz</th><th class='spielspalte'>Spiel</th><th class='ergebnisspalte'>Ergebnis</th></tr>";
 
             for (let j=0; j<(runde[h].length); j++) {
-                spielplan_layout_neu += "<tr><td class='platzspalte'>" + (j+1) + "</td><td class='spielspalte'>" + runde[h][j] + "</td><td class='ergebnisspalte' contenteditable='true'></td></tr>";
+                spielplan_layout_neu += "<tr><td class='platzspalte'>" + (j+1) + "</td><td class='spielspalte'>" + runde[h][j] + "</td><td class='ergebnisspalte ergebnisse' contenteditable='true'></td></tr>";
             }
 
             spielplan_layout_neu += "</table><br>";
@@ -616,7 +656,7 @@
         document.getElementById("tabellendiv").innerHTML = "<div id='druckbereich'><h2>" + document.getElementById("turniername").value + " &ndash; " + new Date().toLocaleDateString('en-GB').replace(/\//g, '.') + "</h2>" + spielplan_layout_neu; + "</div>";
 
         document.getElementById("druckbereich").innerHTML += "<p>Ende aller Partien: <span contenteditable='true'>" + zeit_berechnen('ohne') + "</span></p>";
-        document.getElementById("tabellendiv").innerHTML += "<p><button id='drucken' onclick='drucken()'>Tabelle drucken</button></p>";
+        document.getElementById("tabellendiv").innerHTML += "<p><button id='drucken' class='tabellenbuttons' onclick='drucken()'>Spielplan drucken</button></p>";
 
         // Alle Spielplantabellen gleich breit machen; mithilfe von ChatGPT; angepasst
         let widestTable = 0;
@@ -630,6 +670,8 @@
         tables.forEach(table => {
             table.style.width = widestTable + "px";
         });
+
+        document.getElementById("tabellendiv").innerHTML += "<p><button id='ergebnisbestimmungstabellen_button' class='tabellenbuttons' onclick='ergebnisbestimmungstabelle()'>Auswertung</button></p><br><div id='ergebnis_eintragung_div'></div>";
     }
 
     function partner_gegner_ausgeben(anzahl) {
@@ -988,6 +1030,7 @@
     }
 
     function erstellen() {
+        zuruecksetzen();
         var generationen = 0;
         inputs_umschalten(true);
         var anfangszeit = performance.now()
@@ -1029,9 +1072,9 @@
         }, 0);
     }
 
-    let alte_spielernamen = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
-    let alte_spielernamen_herren = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
-    let alte_spielernamen_damen = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""];
+    let alte_spielernamen = [];
+    let alte_spielernamen_herren = [];
+    let alte_spielernamen_damen = [];
     let davor = "";
     function spieler_anzeigen() {
         // Alte Namen speichern und ausgeben
@@ -1057,7 +1100,7 @@
         var spielerinputs = "";
         
         if (document.getElementById("mixed").checked) {
-            if (alte_spielernamen_herren[0] == "") {
+            if (alte_spielernamen_herren.length == 0) {
                 alte_spielernamen_herren = alphabet.slice(0, (alphabet.length/2));
                 alte_spielernamen_damen = alphabet.slice((alphabet.length/2));
             }
@@ -1069,7 +1112,7 @@
             davor = "mixed";
         }
         else {
-            if (alte_spielernamen[0] == "") {
+            if (alte_spielernamen.length == 0) {
                 alte_spielernamen = alphabet;
             }
             for (i=1; i<=anzahl; i++) {
@@ -1132,15 +1175,122 @@
     function modus() {
         var modus_cb = document.getElementById("mixed");
         if (modus_cb.checked) {
-            document.getElementById("spieler_label").innerHTML = "Anzahl der Spieler pro Geschlecht (max. 16): ";
-            document.getElementById("eingabe_spieler").setAttribute("max", 16);
+            document.getElementById("spieler_label").innerHTML = "Anzahl der Spieler pro Geschlecht (max. 20): ";
+            document.getElementById("eingabe_spieler").setAttribute("max", 20);
         }
         else {
-            document.getElementById("spieler_label").innerHTML = "Anzahl der Spieler (max. 32): ";
-            document.getElementById("eingabe_spieler").setAttribute("max", 32);
+            document.getElementById("spieler_label").innerHTML = "Anzahl der Spieler (max. 40): ";
+            document.getElementById("eingabe_spieler").setAttribute("max", 40);
         }
         
         vorschau()
+    }
+
+    function ergebnisbestimmungstabelle() {
+        //document.getElementById("ergebnisbestimmungstabellen_button").style.display = "none";
+        document.getElementById("ergebnis_eintragung_div").innerHTML = "<h3>Ergebnis-Auswertung</h3><table id='ergebnisbestimmungstabelle'>";
+        for (let i=1; i<runde.length; i++) {
+            for (let u=0; u<runde[i].length; u++) {
+                let spielersplit = runde[i][u].split(" - ");
+                document.getElementById("ergebnisbestimmungstabelle").innerHTML += "<tr><td class='aw_spieler'>" + spielersplit[0] + "</td><td><input class='aw_games' type='number' min=0></td><td class='versteckt'><label><input type='radio' name='result_" + String(i) + "_" + String(u) + "' value='Sieg' class='aw_sieg'>Sieg</label></td></tr>";
+                document.getElementById("ergebnisbestimmungstabelle").innerHTML += "<tr><td class='aw_spieler'>" + spielersplit[1] + "</td><td><input class='aw_games' type='number' min=0></td><td class='versteckt'><label><input type='radio' name='result_" + String(i) + "_" + String(u) + "' value='Sieg' class='aw_sieg'>Sieg</label></td></tr>";
+                document.getElementById("ergebnisbestimmungstabelle").innerHTML += "<tr class='unteregrenze'><td colspan='2'></td><td class='versteckt'><label><input class='aw_unentschieden' type='radio' name='result_" + String(i) + "_" + String(u) + "' value='Unentschieden'>Unentschieden</label></td></tr>";
+            }
+        }
+        document.getElementById("ergebnis_eintragung_div").innerHTML += "</table>";
+        document.getElementById("ergebnis_eintragung_div").innerHTML += "<p><button id='ergebnisse_bestimmen_button' onclick='ergebnisse_bestimmen()'>Auswertung starten</button></p>";
+        document.getElementById("ergebnis_eintragung_div").innerHTML += "<div id='ergebnistabellendiv'></div>";
+
+        let ergebnisarray = [];
+        for (let i=0; i<document.getElementsByClassName("ergebnisse").length; i++) {
+            ergebnisarray = ergebnisarray.concat(document.getElementsByClassName("ergebnisse")[i].innerHTML.split("-"));
+        }
+
+        for (let u=0; u<document.getElementsByClassName("aw_games").length; u++) {
+            document.getElementsByClassName("aw_games")[u].value = ergebnisarray[u];
+        }
+
+        document.getElementById("ergebnisbestimmungstabelle").style.display = "none";
+        document.getElementById("ergebnisse_bestimmen_button").style.display = "none";
+        ergebnisse_bestimmen();
+    }
+
+    function ergebnisse_bestimmen() {
+        // Ein Array mit allen Spielern und den jeweiligen Punkten ung Games definieren
+        let spieler_punkte_games = spieler.map((name) => ({
+            spieler: name,
+            punkte: 0,
+            games: 0,
+            games_gew: 0,
+            games_ver: 0, 
+            siege: 0
+        }));
+
+        for (let i=1; i<spieler_punkte_games.length; i++) {
+            for (let u=0; u<document.getElementsByClassName("aw_spieler").length; u++) {
+                if (document.getElementsByClassName("aw_spieler")[u].innerHTML.includes(spieler_punkte_games[i].spieler)) {  // wenn die Tabellenzeile den Spieler enthält
+
+                    let aktuelle_zeile = Number(document.getElementsByClassName("aw_games")[u].value);
+
+                    spieler_punkte_games[i].games_gew += aktuelle_zeile;
+                                        
+                    if (u%2 == 0) { // wenn die obere Zeile
+                        let kommende_zeile = Number(document.getElementsByClassName("aw_games")[u+1].value);
+                        spieler_punkte_games[i].games_ver += kommende_zeile;
+                        if (aktuelle_zeile > kommende_zeile) {
+                            spieler_punkte_games[i].punkte += 2;
+                            spieler_punkte_games[i].siege += 1;
+                        }
+                        else if (aktuelle_zeile == kommende_zeile) {
+                            spieler_punkte_games[i].punkte += 1;
+                        }
+                    }
+                    else {  // wenn untere Zeile
+                        let vorherige_zeile = Number(document.getElementsByClassName("aw_games")[u-1].value);
+                        spieler_punkte_games[i].games_ver += vorherige_zeile;
+                        if (aktuelle_zeile > vorherige_zeile) {
+                            spieler_punkte_games[i].punkte += 2;
+                            spieler_punkte_games[i].siege += 1;
+                        }
+                        else if (aktuelle_zeile == vorherige_zeile) {
+                            spieler_punkte_games[i].punkte += 1;
+                        }
+                    }
+
+                    spieler_punkte_games[i].games = spieler_punkte_games[i].games_gew - spieler_punkte_games[i].games_ver;
+                }
+            }
+        }
+
+        // Array nach Punkten, Games, Games_gew und Siege absteigend sortieren
+        spieler_punkte_games.sort((a, b) => {
+        if (a.punkte === b.punkte) {
+            // If punkte values are equal, sort by games in descending order
+            if (a.games === b.games) {
+                // If games values are equal, sort by games_gew in descending order
+                if (a.games_gew === b.games_gew) {
+                    // If games_gew values are equal, sort by siege in descending order
+                    return b.siege - a.siege;
+                } 
+                else {
+                    return b.games_gew - a.games_gew;
+                }
+            } 
+            else {
+                return b.games - a.games;
+            }
+        } 
+        else {
+            // Otherwise, sort by punkte in descending order
+            return b.punkte - a.punkte;
+        }});
+
+        document.getElementById("ergebnistabellendiv").innerHTML = "<table border=1 id='ergebnistabelle'></table>";
+        document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th colspan=7>Ergebnis-Tabelle</th></tr><tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
+     
+        for(let i=0; i<spieler_punkte_games.length-1; i++) {
+            document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td><b>" + (i+1) + "</b></td><td>" + spieler_punkte_games[i].spieler + "</td><td>" + spieler_punkte_games[i].punkte + "</td><td>" + spieler_punkte_games[i].games + "</td><td>" + spieler_punkte_games[i].games_gew + "</td><td>" + spieler_punkte_games[i].games_ver + "</td><td>" + spieler_punkte_games[i].siege + "</td></tr>";
+        }
     }
 </script>
     
@@ -1149,14 +1299,16 @@
         <div id="tipps">
             <b>Tipps und Hinweise: </b>
             <ul>
-                <li>Man kann die <b>Ergebnisse direkt in die Tabelle eintragen!</b> <br>(Achtung: Wenn die Seite geschlossen wird, gehen die Ergebnisse verloren!)</li>
+                <li>Man kann die <b>Ergebnisse direkt in die Tabelle eintragen!</b> <br>Für die Auswertung unbedingt <b></b>mit Bindestrich</b> (z.B. 6-3)<br>(Achtung: Wenn die Seite geschlossen wird, gehen die Ergebnisse verloren!)</li>
+                <li>Für die Auswertung sollten <b>alle Ergebnisse eingetragen</b> sein, ansonsten ist die Auswertung fehlerhaft!</li>
                 <li>Die Tabelle kann einfach <b>kopiert</b> und in Excel etc. <b>eingefügt werden</b>.</li>
                 <li>Die Uhrzeit eines Spieles in der Tabelle <b>ist bearbeitbar</b>.</li>
                 <li><b>Keine " - " oder "/" im Spielernamen</b> verwenden ("-" ist ok) --> rote Fehlermeldung</li>
                 <li><b>Keine Namen sollen in anderen enthalten sein</b> --> orange Fehlermeldung</li>
                 <li>Es wird <b>2 Minuten lang</b> versucht, einen guten Spielplan zu generieren. Danach wird abgebrochen. Bei Bedarf einfach erneut versuchen.</li>
-                <li>Wenn eine Meldung kommt, dass die <b>Seite nicht reagiert</b>, bitte einfach auf <b>"Warten"</b> klicken und abwarten.</li>
+                <li>Wenn eine Meldung kommt, dass die <b>Seite nicht reagiert</b>, einfach auf <b>"Warten"</b> klicken und abwarten. Maximal 2 Minuten sollten benötigt werden.</li>
                 <li>Um eine <b>gleiche Anzahl an Spielen pro Spielern</b> zu erreichen: <br>In den Plätze- und Spieler-Eingabefeldern die jeweilige MAXIMALE Anzahl eintragen und danach auf den "Hilfe"-Button unten klicken. Es werden daraufhin Kombinationen angezeigt, mit denen eine gerade Anzahl an Spielern erreicht wird.</li>
+                <li>Bei über 32 Spielern kann das Programm schon mal in die Knie gehen. Nur so als Anmerkung. Die Auslosung könnte also recht lange dauern.</li>
             </ul>
         </div>
         <br><br>
@@ -1184,7 +1336,7 @@
         <b><p id="spiele_pro_spieler">Spiele pro Spieler: </p></b>
         <label for="eingabe_runden">Anzahl der Runden:</label>
         <br>
-        <input type="number" min=1 max="32" value=4 id="eingabe_runden" onchange="vorschau()">
+        <input type="number" min=1 value=4 id="eingabe_runden" onchange="vorschau()">
         <br><br>
         <label for="eingabe_plaetze">Anzahl der Plätze: </label>
         <br>
@@ -1192,9 +1344,9 @@
         <br><br>
         <input type="checkbox" id="mixed" onclick="modus()"><label for="mixed">Mixed-Modus</label>
         <br><br>
-        <label for="eingabe_spieler" id="spieler_label">Anzahl der Spieler (max. 32): </label>
+        <label for="eingabe_spieler" id="spieler_label">Anzahl der Spieler (max. 40): </label>
         <br>
-        <input type="number" min=4 max=32 value=12 id="eingabe_spieler" onchange="vorschau()">
+        <input type="number" min=4 max=40 value=12 id="eingabe_spieler" onchange="vorschau()">
         <button onclick="spieler_anzeigen()" id="spieler_button">Auswählen</button>
         <br>
         <button onclick="spiele_pro_spieler_helfer()" id="spieleprospieler_button">Hilfe für Spiele pro Spieler (siehe Tipp oben!)</button>
@@ -1210,7 +1362,7 @@
     <div id="analysediv"></div>
 
     <div id="version">
-        <span>Version 1.7.2</span>
+        <span>Version 1.8.0</span>
         <br>
         <span>© Michael Hobel</span>
     </div>
