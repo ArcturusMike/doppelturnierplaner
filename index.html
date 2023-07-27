@@ -1,5 +1,5 @@
 <!--
-Änderung gegenüber v1.7.2: Generelle kleine Verbesserungen, Anzahl der Spieler von 32 auf 40 aufgestockt, Ergebnisbestimmungs-Modus hinzugefügt
+Änderung gegenüber v1.8.0: Auswertung bei Mixed auf Herren/Damen aufgeteilt
 -->
 
 <!DOCTYPE html>
@@ -190,6 +190,13 @@
 
         .versteckt {
             display: none;
+        }
+
+        .versteckte_td {
+            height: 10px; 
+            border-right-style: hidden; 
+            border-left-style: hidden; 
+            border-bottom: none;
         }
     </style>
 </head>
@@ -656,7 +663,7 @@
         document.getElementById("tabellendiv").innerHTML = "<div id='druckbereich'><h2>" + document.getElementById("turniername").value + " &ndash; " + new Date().toLocaleDateString('en-GB').replace(/\//g, '.') + "</h2>" + spielplan_layout_neu; + "</div>";
 
         document.getElementById("druckbereich").innerHTML += "<p>Ende aller Partien: <span contenteditable='true'>" + zeit_berechnen('ohne') + "</span></p>";
-        document.getElementById("tabellendiv").innerHTML += "<p><button id='drucken' class='tabellenbuttons' onclick='drucken()'>Spielplan drucken</button></p>";
+        document.getElementById("tabellendiv").innerHTML += "<p><button id='drucken' class='tabellenbuttons' onclick='drucken(\"druckbereich\")'>Spielplan drucken</button></p>";
 
         // Alle Spielplantabellen gleich breit machen; mithilfe von ChatGPT; angepasst
         let widestTable = 0;
@@ -1157,13 +1164,13 @@
         }
     }
 
-    function drucken() {
-        var ergebnis_skript = "<script>alert('Damit die Farben gedruckt werden, beim Druckdialog \"Hintergrundgrafiken\" o.Ä. ankreuzen! \\n\\nSofern der Spielplan nicht auf die ganze Seite passt, versuchen die Seite per Druckeinstellungen zu skalieren!');<\/script>";
+    function drucken(inhalt) {
+        var ergebnis_skript = "<script>alert('Damit die Farben gedruckt werden, beim Druckdialog \"Hintergrundgrafiken\" o.Ä. ankreuzen! \\n\\nSofern der Inhalt nicht auf die ganze Seite passt, versuchen die Seite per Druckeinstellungen zu skalieren!');<\/script>";
 
 
-        var design = '<style>body {font-family: sans-serif;} .spielplantabellen {border-collapse: collapse; background-color: white;} th, td {text-align: center; padding: 5px;} .rundenspalte, .spielspalte, .ergebnisspalte {min-width: 120px;} .platzspalte {width: 75px;} /*.spielspalte {padding-left: 30px; padding-right: 30px;}*/ .tabhead {background-color: silver;color: black; font-size: 10pt;} input[type="text"] {width: 10em;}</style>';
+        var design = '<style>body {font-family: sans-serif;} .spielplantabellen {border-collapse: collapse; background-color: white;} th, td {text-align: center; padding: 5px;} .rundenspalte, .spielspalte, .ergebnisspalte {min-width: 120px;} .platzspalte {width: 75px;} /*.spielspalte {padding-left: 30px; padding-right: 30px;}*/ .tabhead {background-color: silver;color: black; font-size: 10pt;} input[type="text"] {width: 10em;} .versteckte_td {height: 10px; border-right-style: hidden; border-left-style: hidden; border-bottom: none;}#ergebnistabelle {border: 1px solid black; border-collapse: collapse; font-size: 13pt;} #ergebnistabelle th {font-size: 13pt;}</style>';
         
-        var printContent = document.getElementById("druckbereich");
+        var printContent = document.getElementById(inhalt);
         var WinPrint = window.open();
         WinPrint.document.write(printContent.innerHTML + design + ergebnis_skript);
         WinPrint.document.close();
@@ -1188,7 +1195,7 @@
 
     function ergebnisbestimmungstabelle() {
         //document.getElementById("ergebnisbestimmungstabellen_button").style.display = "none";
-        document.getElementById("ergebnis_eintragung_div").innerHTML = "<h3>Ergebnis-Auswertung</h3><table id='ergebnisbestimmungstabelle'>";
+        document.getElementById("ergebnis_eintragung_div").innerHTML = "<div id='druckbereich2'><h3>Ergebnis &ndash; " + document.getElementById("turniername").value + " &ndash; " + new Date().toLocaleDateString('en-GB').replace(/\//g, '.') + "</h3><table id='ergebnisbestimmungstabelle'>";
         for (let i=1; i<runde.length; i++) {
             for (let u=0; u<runde[i].length; u++) {
                 let spielersplit = runde[i][u].split(" - ");
@@ -1199,7 +1206,7 @@
         }
         document.getElementById("ergebnis_eintragung_div").innerHTML += "</table>";
         document.getElementById("ergebnis_eintragung_div").innerHTML += "<p><button id='ergebnisse_bestimmen_button' onclick='ergebnisse_bestimmen()'>Auswertung starten</button></p>";
-        document.getElementById("ergebnis_eintragung_div").innerHTML += "<div id='ergebnistabellendiv'></div>";
+        document.getElementById("ergebnis_eintragung_div").innerHTML += "<div id='ergebnistabellendiv'></div></div>";
 
         let ergebnisarray = [];
         for (let i=0; i<document.getElementsByClassName("ergebnisse").length; i++) {
@@ -1286,11 +1293,47 @@
         }});
 
         document.getElementById("ergebnistabellendiv").innerHTML = "<table border=1 id='ergebnistabelle'></table>";
-        document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th colspan=7>Ergebnis-Tabelle</th></tr><tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
      
-        for(let i=0; i<spieler_punkte_games.length-1; i++) {
-            document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td><b>" + (i+1) + "</b></td><td>" + spieler_punkte_games[i].spieler + "</td><td>" + spieler_punkte_games[i].punkte + "</td><td>" + spieler_punkte_games[i].games + "</td><td>" + spieler_punkte_games[i].games_gew + "</td><td>" + spieler_punkte_games[i].games_ver + "</td><td>" + spieler_punkte_games[i].siege + "</td></tr>";
+        if (document.getElementById("mixed").checked) { // wenn Mixed
+            let herren_punkte_games = [];
+            let damen_punkte_games = [];
+            for (let i=0; i<spieler_punkte_games.length-1; i++) {   // alle Spieler durchgehen
+                for (let u=0; u<document.getElementsByClassName("spielerinputs").length; u++) { // alle Spielerinputs prüfen
+                    if (document.getElementsByClassName("spielerinputs")[u].value == spieler_punkte_games[i].spieler) { // wenn der Spielername im Input vorkommt
+                        if (u%2 == 0) { // wenn Mann
+                            herren_punkte_games.push(spieler_punkte_games[i]);
+                        }
+                        else {  // wenn Frau
+                            damen_punkte_games.push(spieler_punkte_games[i]);
+                        }
+                    }
+                }
+            }
+
+            document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th colspan=7>Damen</th></tr>";
+            document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
+            for(let i=0; i<damen_punkte_games.length; i++) {
+                document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td><b>" + (i+1) + "</b></td><td>" + damen_punkte_games[i].spieler + "</td><td>" + damen_punkte_games[i].punkte + "</td><td>" + damen_punkte_games[i].games + "</td><td>" + damen_punkte_games[i].games_gew + "</td><td>" + damen_punkte_games[i].games_ver + "</td><td>" + damen_punkte_games[i].siege + "</td></tr>";
+            }
+            document.getElementById("ergebnistabelle").innerHTML += "<tr><td colspan=7 class='versteckte_td'></td></tr>";
+            document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th colspan=7>Herren</th></tr>";
+            document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
+            for(let i=0; i<herren_punkte_games.length; i++) {
+                document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td><b>" + (i+1) + "</b></td><td>" + herren_punkte_games[i].spieler + "</td><td>" + herren_punkte_games[i].punkte + "</td><td>" + herren_punkte_games[i].games + "</td><td>" + herren_punkte_games[i].games_gew + "</td><td>" + herren_punkte_games[i].games_ver + "</td><td>" + herren_punkte_games[i].siege + "</td></tr>";
+            }
         }
+        else {  // wenn Normal
+            document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'></tr><tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
+            for(let i=0; i<spieler_punkte_games.length-1; i++) {
+                document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td><b>" + (i+1) + "</b></td><td>" + spieler_punkte_games[i].spieler + "</td><td>" + spieler_punkte_games[i].punkte + "</td><td>" + spieler_punkte_games[i].games + "</td><td>" + spieler_punkte_games[i].games_gew + "</td><td>" + spieler_punkte_games[i].games_ver + "</td><td>" + spieler_punkte_games[i].siege + "</td></tr>";
+            }
+        }
+
+        document.getElementById("ergebnis_eintragung_div").innerHTML += "<br><p>Reihung: 1. Punkte, 2. Game-Diff., 3. Games gew., 4. Siege</p>";
+
+        if (!document.getElementById("drucken2")) {
+            document.getElementById("tabellendiv").innerHTML += "<p><button id='drucken2' class='tabellenbuttons' onclick='drucken(\"ergebnis_eintragung_div\")'>Ergebnis-Auswertung drucken</button></p>";
+        }        
     }
 </script>
     
@@ -1362,7 +1405,7 @@
     <div id="analysediv"></div>
 
     <div id="version">
-        <span>Version 1.8.0</span>
+        <span>Version 1.8.1</span>
         <br>
         <span>© Michael Hobel</span>
     </div>
