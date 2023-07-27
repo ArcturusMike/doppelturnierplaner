@@ -9,11 +9,9 @@
 
 **Generell:**
 - [ ] Schließen-Alert wieder aktivieren
-- [ ] Auswertung nach Herren/Damen trennen
-- [ ] Auswertung ausdrucken per Button
-- [ ] Die Dauer pro Spiel neben die Tabelle hinschreiben bzw. die Endzeit jeder Runde dazuschreiben (z.B. 09.30 - 09.55 Uhr)
 - [ ] var zu let & const austauschen bzw. generell ALLE Variablen nach heutigem Standard deklarieren
 - [ ] "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben.
+- [ ] Das "Spieler Spiele Anzahl Array" mit dem "Spieler Punkte Games Array" verknüpfen
 - [ ] Die Generation nach Runden duch Generation nach gewünschter Spiele pro Spieler ersetzen
 - [ ] Die Auto-Neugenerierung verbessern: Wenn nach gewisser Zeit keine Spiele ohne doppelten Paarungen gefunden werden konnten, die Bedingungen erleichtern, z.B. 2 Spieler dürfen doppelte Partner haben oder jeder darf 1 doppelten Partner haben o.Ä. etc. (für die Gegner das gleiche)
 - [ ] Gegner-Generierung verbessern (doppelt und dreifach 1 Person)
@@ -23,6 +21,9 @@
 
 
 **Erledigt:**
+- [x] Auswertung nach Herren/Damen trennen
+- [x] Auswertung ausdrucken per Button
+
 
 
 **Nicht möglich oder notwendig:**
