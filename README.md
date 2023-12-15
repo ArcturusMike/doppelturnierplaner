@@ -9,6 +9,8 @@
 
 **Generell:**
 - [ ] Schließen-Alert wieder aktivieren
+- [ ] Anzahl der Runden / Anzahl der Spiele pro Spieler besser deklarieren (für Rene)
+- [ ] Möglichkeit der Speicherung und Abrufung eines generierten Spielplans einbauen mittels localStorage
 - [ ] var zu let & const austauschen bzw. generell ALLE Variablen nach heutigem Standard deklarieren
 - [ ] "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben.
 - [ ] Das "Spieler Spiele Anzahl Array" mit dem "Spieler Punkte Games Array" verknüpfen
@@ -17,6 +19,8 @@
 - [ ] Gegner-Generierung verbessern (doppelt und dreifach 1 Person)
 - [ ] Performance optimieren: https://www.w3schools.com/js/js_performance.asp
 - [ ] ChatGPT nach alternativen Generationsmöglichkeiten fragen
+- [ ] Verschönern mittels Bootstrap o.Ä.?
+- [ ] Umbau zu Desktop Application mittels Electron?
 
 
 
