@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Doppelturnierplaner-Starter</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+        button {
+            width: 400px;
+            border: 1px solid black;
+            border-radius: 10px;
+        }
+        #starter {
+            font-size: 16pt;
+            
+            height: 100px;
+            background-color: lightgreen;
+            
+        }
+        #downloader {
+            font-size: 14pt;
+            height: 60px;
+            background-color: lightblue;
+        }
+        button:hover {
+           cursor: pointer; 
+        }
+    </style>
+    <script>
+        var link = "https://arcturusmike.github.io/doppelturnierplaner/";
+
+		function openWindow() {
+			var windowFeatures = "width=" + window.innerWidth + ",height=" + window.innerHeight;
+			window.open(link, "newWindow", windowFeatures);
+		}
+
+        function downloadPage() {
+            // Create a new XMLHttpRequest object
+            var xhr = new XMLHttpRequest();
+
+            // Set up the download request
+            xhr.open('GET', link, true);
+            xhr.responseType = 'blob';
+
+            // Handle the download response
+            xhr.onload = function() {
+                // Create a new anchor element
+                var a = document.createElement('a');
+                a.href = window.URL.createObjectURL(xhr.response);
+                a.download = 'spielplangenerator_' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '.html';
+
+                // Programmatically trigger a click on the anchor element
+                var event = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: true
+                });
+                a.dispatchEvent(event);
+            };
+
+            // Send the download request
+            xhr.send();
+        }
+
+	</script>
+</head>
+<body onload="openWindow()">
+	<h1>Doppelturnierplaner-Starter</h1>
+    <button id="starter" onclick="openWindow()">Spielplangenerator starten<br>(aktuelle Version)</button>
+    <p>Nach dem Öffnen des Generators kann diese Seite geschlossen werden.</p>
+    <br><br>
+    <button id="downloader" onclick="downloadPage()">Spielplangenerator downloaden</button>
+    <p>Der aktuelle Generator wird heruntergeladen, allerdings gibt es <b>keine automatischen Updates</b>.</p>
+</body>
+</html>
