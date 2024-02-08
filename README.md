@@ -2,7 +2,7 @@
 ## To-Do-Liste
 
 **Normal:**
-
+- [ ] Whist-Scheduling-Modus einbauen als Alternative, wenn die Anzahl der Spieler passt
 
 **Mixed:**
 - [ ] Bei Endpunktetabelle das Verschieben von Spielern in die andere Kategorie möglich machen
