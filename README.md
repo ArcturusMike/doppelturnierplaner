@@ -4,14 +4,13 @@
 - [ ] Schließen-Alert wieder aktivieren
 - [ ] Bei Endpunktetabelle das Verschieben von Spielern in die andere Kategorie möglich machen
 - [ ] Im Ladekreis einen Countdown machen, damit der User weiß, wie viel Zeit fürs Generieren noch maximal benötigt wird
-- [ ] Verschieben von einzelnen Spielern in der Mixed-Ergebnistabelle per Button möglich machen
 - [ ] Möglichkeit der Speicherung und Abrufung eines generierten Spielplans einbauen mittels localStorage
-- [ ] Die Generation nach Runden duch Generation nach gewünschter Spiele pro Spieler ersetzen
-- [ ] "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben.
+- [ ] Die Generation nach Runden duch Generation nach gewünschter Spiele pro Spieler ersetzen (evtl. nur gerade Anzahl an Spielen möglich?)
+- [ ] "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben. (wie bewerten?)
 - [ ] Die Auto-Neugenerierung verbessern: Wenn nach gewisser Zeit keine Spiele ohne doppelten Paarungen gefunden werden konnten, die Bedingungen erleichtern, z.B. 2 Spieler dürfen doppelte Partner haben oder jeder darf 1 doppelten Partner haben o.Ä. etc. (für die Gegner das gleiche)
 - [ ] Gegner-Generierung verbessern (doppelt und dreifach 1 Person)
 - [ ] Performance optimieren: https://www.w3schools.com/js/js_performance.asp
-- [ ] ChatGPT nach alternativen Generationsmöglichkeiten fragen
+- [ ] Mithilfe von ChatGPT alternative Generationsalgorithmen ausdenken
 - [ ] Verschönern mittels Bootstrap o.Ä.?
 - [ ] Umbau zu Desktop Application mittels Electron?
 
