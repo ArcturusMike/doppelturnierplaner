@@ -2,6 +2,7 @@
 ## To-Do-Liste
 
 - [ ] Schließen-Alert wieder aktivieren
+- [ ] Auswertung-Bug beheben, wo die Auswertung nicht stimmt, wenn man zu früh auf den Button drückt
 - [ ] Bei Endpunktetabelle das Verschieben von Spielern in die andere Kategorie möglich machen
 - [ ] Im Ladekreis einen Countdown machen, damit der User weiß, wie viel Zeit fürs Generieren noch maximal benötigt wird
 - [ ] Möglichkeit der Speicherung und Abrufung eines generierten Spielplans einbauen mittels localStorage
