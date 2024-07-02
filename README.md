@@ -2,10 +2,8 @@
 ## To-Do-Liste
 
 - [ ] Schließen-Alert wieder aktivieren
-- [ ] Auswertung-Bug beheben, wo die Auswertung nicht stimmt, wenn man zu früh auf den Button drückt
 - [ ] Bei Endpunktetabelle das Verschieben von Spielern in die andere Kategorie möglich machen
-- [ ] Im Ladekreis einen Countdown machen, damit der User weiß, wie viel Zeit fürs Generieren noch maximal benötigt wird
-- [ ] Möglichkeit der Speicherung und Abrufung eines generierten Spielplans einbauen mittels localStorage
+- [ ] Den Ladekreis durch einen Countdown ersetzen, damit der User weiß, wie viel Zeit fürs Generieren noch maximal benötigt wird
 - [ ] Die Generation nach Runden duch Generation nach gewünschter Spiele pro Spieler ersetzen (evtl. nur gerade Anzahl an Spielen möglich?)
 - [ ] "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben. (wie bewerten?)
 - [ ] Die Auto-Neugenerierung verbessern: Wenn nach gewisser Zeit keine Spiele ohne doppelten Paarungen gefunden werden konnten, die Bedingungen erleichtern, z.B. 2 Spieler dürfen doppelte Partner haben oder jeder darf 1 doppelten Partner haben o.Ä. etc. (für die Gegner das gleiche)
@@ -18,6 +16,7 @@
 
 
 **Erledigt:**
+- [x] Möglichkeit der Speicherung und Abrufung eines generierten Spielplans einbauen mittels localStorage
 - [x] Auswertung nach Herren/Damen trennen
 - [x] Auswertung ausdrucken per Button
 - [x] Anzahl der Runden / Anzahl der Spiele pro Spieler besser deklarieren (für Rene)
