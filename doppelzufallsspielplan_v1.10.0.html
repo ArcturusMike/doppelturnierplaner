@@ -1,7 +1,7 @@
 <!--
 Änderung gegenüber v1.9.0: 
     - localStorage für Spielpläne eingebaut
-
+    - Mixed als Standard gesetzt
 -->
 
 <!DOCTYPE html>
@@ -131,6 +131,12 @@
             border: 1px solid grey;
             border-radius: 5px;
             padding: 5px;
+        }
+
+        #speichern_button {
+            background-color: coral;
+            color: black;
+            font-weight: bold;
         }
 
         button:enabled:hover {
@@ -989,6 +995,8 @@
         localStorage.setItem('spielernamen_damen', JSON.stringify(namen_damen));
         localStorage.setItem('zeiten', JSON.stringify(zeitpunkte));
 
+        document.getElementById("speichern_button").style.display = "none";
+
         alert("Spielplan gespeichert.");
     }
 
@@ -1465,11 +1473,11 @@
         <br>
         <input type="number" min=1 value=3 id="eingabe_plaetze" onchange="vorschau()">
         <br><br>
-        <input type="checkbox" id="mixed" onclick="modus()"><label for="mixed">Mixed-Modus</label>
+        <input type="checkbox" id="mixed" onclick="modus()" checked autocomplete="off"><label for="mixed">Mixed-Modus</label>
         <br><br>
-        <label for="eingabe_spieler" id="spieler_label">Anzahl der Spieler (max. 40): </label>
+        <label for="eingabe_spieler" id="spieler_label">Anzahl der Spieler pro Geschlecht (max. 20): </label>
         <br>
-        <input type="number" min=4 max=40 value=12 id="eingabe_spieler" onchange="vorschau()">
+        <input type="number" min=4 max=20 value=12 id="eingabe_spieler" onchange="vorschau()">
         <button onclick="spielerAnzeigen()" id="spieler_button">Auswählen</button>
         <br>
         <button onclick="spieleProSpielerHelfer()" id="spieleprospieler_button">Hilfe für Spiele pro Spieler (siehe Tipp oben!)</button>
@@ -1493,13 +1501,13 @@
     </div>
 
 <script>
-    /*
+    
     window.addEventListener('beforeunload', function (e) {
         e.preventDefault();
         e.returnValue = '';
         return "Soll die aktuelle Seite geschlossen oder neu geladen werden? ALLE Daten gehen verloren!";
     });
-    */
+    
 </script>
 </body>
 </html>

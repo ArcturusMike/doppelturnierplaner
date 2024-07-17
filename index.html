@@ -1,8 +1,7 @@
 <!--
-Änderung gegenüber v1.8.2: 
-    - MAJOR REWRITE! Globale Variablen bestmöglich auf Funktionsparameter umgebaut, damit bessere Strukturierung und leichtere Lesbarkeit
-    - "Ur-Array" pro alle möglichen Spielerkombinationen erstellt für bessere Performance
-    - Messungen: bis zu 600% schneller! (9 vs 55 Generierungen/Sekunde)
+Änderung gegenüber v1.9.0: 
+    - localStorage für Spielpläne eingebaut
+    - Mixed als Standard gesetzt
 -->
 
 <!DOCTYPE html>
@@ -134,6 +133,12 @@
             padding: 5px;
         }
 
+        #speichern_button {
+            background-color: coral;
+            color: black;
+            font-weight: bold;
+        }
+
         button:enabled:hover {
             cursor: pointer;
         }
@@ -211,9 +216,12 @@
     let alte_spielernamen_damen = [];
     let vorheriger_modus = "";
 
-    // globale Variablen für die Ergebnisbestimmung
+    // globale Variablen für die Ergebnisbestimmung und Speichern/Wiederherstellen
     let turnierspielplan = [];
     let spielernamen = [];
+    let spielernamen_herren = [];
+    let spielernamen_damen = [];
+    let zeiten = [];
 
     function vorschau() { // von ChatGPT; angepasst
         // für Endzeit
@@ -962,6 +970,7 @@
         uhrzeit = ('0' + zeitpunkt.getHours()).slice(-2) + "." + ('0' + zeitpunkt.getMinutes()).slice(-2) + " Uhr";
         document.getElementById("druckbereich").innerHTML += "<p>Ende aller Partien: <span contenteditable='true'>" + uhrzeit + "</span></p>";
         document.getElementById("tabellendiv").innerHTML += "<p><button id='drucken_spielplan' class='tabellenbuttons' onclick='drucken(\"druckbereich\")'>Spielplan drucken</button></p>";
+        document.getElementById("tabellendiv").innerHTML += "<p><button id='speichern_button' class='tabellenbuttons' onclick='spielplanSpeichern(turnierspielplan, spielernamen, spielernamen_herren, spielernamen_damen, zeiten)'>Spielplan speichern <span style='font-size: 8pt'>(ohne Ergebnisse!)</span></button></p><br>";
 
         // Alle Spielplantabellen gleich breit machen; mithilfe von ChatGPT; angepasst
         let widestTable = 0;
@@ -976,7 +985,37 @@
             table.style.width = widestTable + "px";
         });
 
-        document.getElementById("tabellendiv").innerHTML += "<p><button id='ergebnisbestimmungstabellen_button' class='tabellenbuttons' onclick='ergebnisbestimmungstabelle(turnierspielplan, spielernamen)'>Auswertung</button></p><br><div id='ergebnis_eintragung_div'></div>";
+        document.getElementById("tabellendiv").innerHTML += "<p><button id='ergebnisbestimmungstabellen_button' class='tabellenbuttons' onclick='ergebnisbestimmungstabelle(turnierspielplan, spielernamen)'>Auswertung <span style='font-size: 8pt'>(zuerst Ergebnisse eintragen!)</span></button></p><br><div id='ergebnis_eintragung_div'></div>";
+    }
+
+    function spielplanSpeichern(spielplan, namen, namen_herren, namen_damen, zeitpunkte) {
+        localStorage.setItem('turnierspielplan', JSON.stringify(spielplan));
+        localStorage.setItem('spielernamen', JSON.stringify(namen));
+        localStorage.setItem('spielernamen_herren', JSON.stringify(namen_herren));
+        localStorage.setItem('spielernamen_damen', JSON.stringify(namen_damen));
+        localStorage.setItem('zeiten', JSON.stringify(zeitpunkte));
+
+        document.getElementById("speichern_button").style.display = "none";
+
+        alert("Spielplan gespeichert.");
+    }
+
+    function spielplanLaden() {
+        turnierspielplan = JSON.parse(localStorage.getItem('turnierspielplan'));
+        spielernamen = JSON.parse(localStorage.getItem('spielernamen'));
+        spielernamen_herren = JSON.parse(localStorage.getItem('spielernamen_herren'));
+        spielernamen_damen = JSON.parse(localStorage.getItem('spielernamen_damen'));
+        zeiten = JSON.parse(localStorage.getItem('zeiten'));
+
+        if (spielernamen_herren.length > 0) {
+            document.getElementById("mixed").checked = true;
+        }
+        else {
+            document.getElementById("mixed").checked = false;
+        }
+
+        inputsUmschalten(true);
+        spielplanAusgeben(turnierspielplan, (turnierspielplan.length - 1), zeiten[0], zeiten[1], zeiten[2], zeiten[3]);
     }
 
     function doppeltePartnerVorhanden(arr) { // von ChatGPT; angepasst
@@ -1215,6 +1254,20 @@
 
             turnierspielplan = turnier.slice();
             spielernamen = spieler_gesamt.slice();
+
+            // Für Mixed-Wiederherstellung alle Namen pro Geschlecht speichern
+            if (mixed_checkbox == true) {
+                for (i = 0; i < spieler_eingabe; i++) {
+                    spielernamen_herren.push(spieler_spiele_dictionary_herren[i].spieler);
+                    spielernamen_damen.push(spieler_spiele_dictionary_damen[i].spieler);
+                }
+            }
+            else {
+                spielernamen_herren = [];
+                spielernamen_damen = [];
+            }
+
+            zeiten = [startzeit, halbzeit, spielzeit, pausenzeit];
         }, 0);
     }
     
@@ -1344,15 +1397,11 @@
             let herren_punkte_games = [];
             let damen_punkte_games = [];
             for (let i = 0; i < spieler_punkte_games.length-1; i++) {   // alle Spieler durchgehen
-                for (let u = 0; u < document.getElementsByClassName("spielerinputs").length; u++) { // alle Spielerinputs prüfen
-                    if (document.getElementsByClassName("spielerinputs")[u].value == spieler_punkte_games[i].spieler) { // wenn der Spielername im Input vorkommt
-                        if (u%2 == 0) { // wenn Mann
-                            herren_punkte_games.push(spieler_punkte_games[i]);
-                        }
-                        else {  // wenn Frau
-                            damen_punkte_games.push(spieler_punkte_games[i]);
-                        }
-                    }
+                if (spielernamen_herren.includes(spieler_punkte_games[i].spieler)) { // wenn Mann
+                    herren_punkte_games.push(spieler_punkte_games[i]);
+                }
+                else if (spielernamen_damen.includes(spieler_punkte_games[i].spieler)) { // wenn Frau
+                    damen_punkte_games.push(spieler_punkte_games[i]);
                 }
             }
 
@@ -1424,11 +1473,11 @@
         <br>
         <input type="number" min=1 value=3 id="eingabe_plaetze" onchange="vorschau()">
         <br><br>
-        <input type="checkbox" id="mixed" onclick="modus()"><label for="mixed">Mixed-Modus</label>
+        <input type="checkbox" id="mixed" onclick="modus()" checked autocomplete="off"><label for="mixed">Mixed-Modus</label>
         <br><br>
-        <label for="eingabe_spieler" id="spieler_label">Anzahl der Spieler (max. 40): </label>
+        <label for="eingabe_spieler" id="spieler_label">Anzahl der Spieler pro Geschlecht (max. 20): </label>
         <br>
-        <input type="number" min=4 max=40 value=12 id="eingabe_spieler" onchange="vorschau()">
+        <input type="number" min=4 max=20 value=12 id="eingabe_spieler" onchange="vorschau()">
         <button onclick="spielerAnzeigen()" id="spieler_button">Auswählen</button>
         <br>
         <button onclick="spieleProSpielerHelfer()" id="spieleprospieler_button">Hilfe für Spiele pro Spieler (siehe Tipp oben!)</button>
@@ -1440,11 +1489,13 @@
         <button onclick="inputsUmschalten(false)" id="reaktivieren_button">Eingabefelder reaktivieren</button>
         <br><br>
     </div>
-    <div id="tabellendiv"></div>
+    <div id="tabellendiv">
+        <button id='wiederherstellen_button' class='tabellenbuttons' onclick='spielplanLaden()'>Spielplan wiederherstellen</button>
+    </div>
     <div id="analysediv"></div>
 
     <div id="version">
-        <span>Version 1.9.0</span>
+        <span>Version 1.10.0</span>
         <br>
         <span>© Michael Hobel</span>
     </div>
