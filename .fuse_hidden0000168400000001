@@ -1,7 +1,7 @@
 <!--
-Änderung gegenüber v1.10.0: 
-    - Bei Endpunktetabelle das Verschieben von Spielern in die andere Kategorie möglich gemacht, funktioniert tadellos
-    - ABER: Bug bei der Auswertung entdeckt: Bei 5 Auswertungen des gleichen SPielplans kommen unterschiedliche Ergebnisse raus
+Änderung gegenüber v1.9.0: 
+    - localStorage für Spielpläne eingebaut
+    - Mixed als Standard gesetzt
 -->
 
 <!DOCTYPE html>
@@ -215,8 +215,6 @@
     let alte_spielernamen_herren = [];
     let alte_spielernamen_damen = [];
     let vorheriger_modus = "";
-    let auswertung_herren = [];
-    let auswertung_damen = [];
 
     // globale Variablen für die Ergebnisbestimmung und Speichern/Wiederherstellen
     let turnierspielplan = [];
@@ -1009,11 +1007,6 @@
         spielernamen_damen = JSON.parse(localStorage.getItem('spielernamen_damen'));
         zeiten = JSON.parse(localStorage.getItem('zeiten'));
 
-        // Abbruch ohne Fehlermeldung in Konsole
-        if (turnierspielplan == null) {
-            return;
-        }
-
         if (spielernamen_herren.length > 0) {
             document.getElementById("mixed").checked = true;
         }
@@ -1305,7 +1298,7 @@
             }
         }
         document.getElementById("ergebnis_eintragung_div").innerHTML += "</table>";
-        document.getElementById("ergebnis_eintragung_div").innerHTML += "<p><button id='ergebnisse_bestimmen_button' onclick='auswertung()'>Auswertung starten</button></p>";
+        document.getElementById("ergebnis_eintragung_div").innerHTML += "<p><button id='ergebnisse_bestimmen_button' onclick='ergebnisseBestimmen()'>Auswertung starten</button></p>";
         document.getElementById("ergebnis_eintragung_div").innerHTML += "<div id='ergebnistabellendiv'></div></div>";
 
         let ergebnisarray = [];
@@ -1319,34 +1312,10 @@
 
         document.getElementById("ergebnisbestimmungstabelle").style.display = "none";
         document.getElementById("ergebnisse_bestimmen_button").style.display = "none";
-        auswertung(spieler);
+        ergebnisseBestimmen(spieler);
     }
     
-    function auswertungSortieren(liste) {
-        liste.sort((a, b) => {
-        if (a.punkte === b.punkte) {
-            // If punkte values are equal, sort by games in descending order
-            if (a.games === b.games) {
-                // If games values are equal, sort by games_gew in descending order
-                if (a.games_gew === b.games_gew) {
-                    // If games_gew values are equal, sort by siege in descending order
-                    return b.siege - a.siege;
-                } 
-                else {
-                    return b.games_gew - a.games_gew;
-                }
-            } 
-            else {
-                return b.games - a.games;
-            }
-        } 
-        else {
-            // Otherwise, sort by punkte in descending order
-            return b.punkte - a.punkte;
-        }});
-    }
-
-    function auswertung(spieler) {
+    function ergebnisseBestimmen(spieler) {
         // Ein Array mit allen Spielern und den jeweiligen Punkten ung Games definieren
         let spieler_punkte_games = spieler.map((name) => ({
             spieler: name,
@@ -1394,10 +1363,30 @@
         }
 
         // Array nach Punkten, Games, Games_gew und Siege absteigend sortieren
-        auswertungSortieren(spieler_punkte_games);
+        spieler_punkte_games.sort((a, b) => {
+        if (a.punkte === b.punkte) {
+            // If punkte values are equal, sort by games in descending order
+            if (a.games === b.games) {
+                // If games values are equal, sort by games_gew in descending order
+                if (a.games_gew === b.games_gew) {
+                    // If games_gew values are equal, sort by siege in descending order
+                    return b.siege - a.siege;
+                } 
+                else {
+                    return b.games_gew - a.games_gew;
+                }
+            } 
+            else {
+                return b.games - a.games;
+            }
+        } 
+        else {
+            // Otherwise, sort by punkte in descending order
+            return b.punkte - a.punkte;
+        }});
 
-        // Ergebnistabellenausgabe
         document.getElementById("ergebnistabellendiv").innerHTML = "<table border=1 id='ergebnistabelle'></table>";
+     
         if (document.getElementById("mixed").checked == false) {  // wenn Normal
             document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'></tr><tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
             for (let i = 0; i < spieler_punkte_games.length-1; i++) {
@@ -1405,16 +1394,28 @@
             }
         }
         else { // wenn Mixed
-            for (let i = 0; i < spieler_punkte_games.length-1; i++) {   // alle Spieler durchgehen und nach Geschlecht aufteilen
+            let herren_punkte_games = [];
+            let damen_punkte_games = [];
+            for (let i = 0; i < spieler_punkte_games.length-1; i++) {   // alle Spieler durchgehen
                 if (spielernamen_herren.includes(spieler_punkte_games[i].spieler)) { // wenn Mann
-                    auswertung_herren.push(spieler_punkte_games[i]);
+                    herren_punkte_games.push(spieler_punkte_games[i]);
                 }
                 else if (spielernamen_damen.includes(spieler_punkte_games[i].spieler)) { // wenn Frau
-                    auswertung_damen.push(spieler_punkte_games[i]);
+                    damen_punkte_games.push(spieler_punkte_games[i]);
                 }
             }
-            
-            auswertungMixed();
+
+            document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th colspan=7>Damen</th></tr>";
+            document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
+            for (let i = 0; i < damen_punkte_games.length; i++) {
+                document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td><b>" + (i+1) + "</b></td><td>" + damen_punkte_games[i].spieler + "</td><td>" + damen_punkte_games[i].punkte + "</td><td>" + damen_punkte_games[i].games + "</td><td>" + damen_punkte_games[i].games_gew + "</td><td>" + damen_punkte_games[i].games_ver + "</td><td>" + damen_punkte_games[i].siege + "</td></tr>";
+            }
+            document.getElementById("ergebnistabelle").innerHTML += "<tr><td colspan=7 class='versteckte_td'></td></tr>";
+            document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th colspan=7>Herren</th></tr>";
+            document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
+            for (let i = 0; i < herren_punkte_games.length; i++) {
+                document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td><b>" + (i+1) + "</b></td><td>" + herren_punkte_games[i].spieler + "</td><td>" + herren_punkte_games[i].punkte + "</td><td>" + herren_punkte_games[i].games + "</td><td>" + herren_punkte_games[i].games_gew + "</td><td>" + herren_punkte_games[i].games_ver + "</td><td>" + herren_punkte_games[i].siege + "</td></tr>";
+            }
         }
 
         document.getElementById("ergebnis_eintragung_div").innerHTML += "<br><p>Reihung: 1. Punkte, 2. Game-Diff., 3. Games gew., 4. Siege</p>";
@@ -1423,46 +1424,6 @@
             document.getElementById("tabellendiv").innerHTML += "<p><button id='drucken_ergebnistabelle' class='tabellenbuttons' onclick='drucken(\"ergebnis_eintragung_div\")'>Ergebnis-Auswertung drucken</button></p>";
         }        
     }
-    
-    function auswertungMixed() {
-        document.getElementById("ergebnistabelle").innerHTML = "<tr class='tabhead'><th colspan=7>Damen</th></tr>";
-        document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
-        for (let i = 0; i < auswertung_damen.length; i++) {
-            document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td><b>" + (i+1) + "</b></td><td onclick='spielerVerschieben(\"" + auswertung_damen[i].spieler + "\", \"damen\")' title='Draufklicken zum Verschieben zu den Herren' style='cursor: pointer'>" + auswertung_damen[i].spieler + "</td><td>" + auswertung_damen[i].punkte + "</td><td>" + auswertung_damen[i].games + "</td><td>" + auswertung_damen[i].games_gew + "</td><td>" + auswertung_damen[i].games_ver + "</td><td>" + auswertung_damen[i].siege + "</td></tr>";
-        }
-        document.getElementById("ergebnistabelle").innerHTML += "<tr><td colspan=7 class='versteckte_td'></td></tr>";
-
-        document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th colspan=7>Herren</th></tr>";
-        document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
-        for (let i = 0; i < auswertung_herren.length; i++) {
-            document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td><b>" + (i+1) + "</b></td><td onclick='spielerVerschieben(\"" + auswertung_herren[i].spieler + "\", \"herren\")' title='Draufklicken zum Verschieben zu den Damen' style='cursor: pointer'>" + auswertung_herren[i].spieler + "</td><td>" + auswertung_herren[i].punkte + "</td><td>" + auswertung_herren[i].games + "</td><td>" + auswertung_herren[i].games_gew + "</td><td>" + auswertung_herren[i].games_ver + "</td><td>" + auswertung_herren[i].siege + "</td></tr>";
-        }
-    }
-
-    function spielerVerschieben(spieler, ursprung) {
-        if (ursprung == "damen") {
-            let index = auswertung_damen.findIndex(player => player.spieler === spieler);
-            let player = auswertung_damen.splice(index, 1)[0]; // Remove from Damen
-            auswertung_herren.push(player); // Add to Herren
-        }
-        else if (ursprung == "herren") {
-            let index = auswertung_herren.findIndex(player => player.spieler === spieler);
-            let player = auswertung_herren.splice(index, 1)[0]; // Remove from Herren
-            auswertung_damen.push(player); // Add to Damen
-        }
-        else {
-            alert("Huh?");
-        }
-
-        // beide Listen wieder nach Punkten, Games, Games_gew und Siege absteigend sortieren
-        auswertungSortieren(auswertung_herren);
-        auswertungSortieren(auswertung_damen);
-
-        auswertungMixed();
-
-    }
-    
-    
     </script>
     
     <h1>Spielplangenerator &ndash; Doppelturnier</h1>
@@ -1471,7 +1432,6 @@
             <b>Tipps und Hinweise: </b>
             <ul>
                 <li>Man kann die <b>Ergebnisse direkt in die Tabelle eintragen!</b> <br>Für die Auswertung unbedingt <b></b>mit Bindestrich</b> (z.B. 6-3).</li>
-                <li style="background-color: yellow;"><b>Mixed:</b> Fürs <b>Verschieben von Spielern</b> bei der Endrangliste (Herren nach Damen oder umgekehrt), einfach <b>auf den Namen klicken!</b></li>
                 <li>Die Tabelle kann einfach <b>kopiert</b> und in Excel etc. <b>eingefügt werden</b>.</li>
                 <li>Die Uhrzeit eines Spieles in der Tabelle <b>ist bearbeitbar</b>.</li>
                 <li><b>Keine " - " oder "/" im Spielernamen</b> verwenden ("-" ist ok) -> rote Fehlermeldung</li>
@@ -1535,7 +1495,7 @@
     <div id="analysediv"></div>
 
     <div id="version">
-        <span>Version 1.11.0</span>
+        <span>Version 1.10.0</span>
         <br>
         <span>© Michael Hobel</span>
     </div>
