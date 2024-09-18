@@ -1434,7 +1434,6 @@
     function auswertungMixed() {
         document.getElementById("ergebnistabelle").innerHTML = "<tr class='tabhead'><th colspan=7>Damen</th></tr>";
         document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
-        alert(damen_punkte_games.length);
         for (let i = 0; i < damen_punkte_games.length; i++) {
             document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td contenteditable='true'><b>" + (i+1) + "</b></td><td onclick='spielerVerschieben(\"" + damen_punkte_games[i].spieler + "\", \"damen\")' title='Draufklicken zum Verschieben zu den Herren' style='cursor: pointer'>" + damen_punkte_games[i].spieler + "</td><td>" + damen_punkte_games[i].punkte + "</td><td>" + damen_punkte_games[i].games + "</td><td>" + damen_punkte_games[i].games_gew + "</td><td>" + damen_punkte_games[i].games_ver + "</td><td>" + damen_punkte_games[i].siege + "</td></tr>";
         }
