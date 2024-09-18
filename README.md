@@ -1,8 +1,7 @@
 # Spielplangenerator
 ## To-Do-Liste
-
 - [ ] Schließen-Alert wieder aktivieren
-- [ ] Bei Endpunktetabelle das Verschieben von Spielern in die andere Kategorie möglich machen
+- [ ] Den leeren [0]-Slot bei Turnierspielplan und Spielerliste schon bei der Generierung wegbekommen
 - [ ] Den Ladekreis durch einen Countdown ersetzen, damit der User weiß, wie viel Zeit fürs Generieren noch maximal benötigt wird
 - [ ] Die Generation nach Runden duch Generation nach gewünschter Spiele pro Spieler ersetzen (evtl. nur gerade Anzahl an Spielen möglich?)
 - [ ] "Jeden generierten Spielplan als "best_so_far" speichern. Wenn der darauffolgende besser ist, dadurch ersetzen. Zum Schluss den besten ausgeben. (wie bewerten?)
@@ -16,6 +15,7 @@
 
 
 **Erledigt:**
+- [x] Bei Endpunktetabelle das Verschieben von Spielern in die andere Kategorie möglich machen
 - [x] Möglichkeit der Speicherung und Abrufung eines generierten Spielplans einbauen mittels localStorage
 - [x] Auswertung nach Herren/Damen trennen
 - [x] Auswertung ausdrucken per Button

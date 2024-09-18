@@ -1,6 +1,7 @@
 <!--
 Änderung gegenüber v1.11.0: 
     - Auswertung-Bug (hoffentlich) behoben
+    - Endplatzierung manuell bearbeitbar
 -->
 
 <!DOCTYPE html>
@@ -195,10 +196,6 @@
             font-size: 13pt;
         }
 
-        .versteckt {
-            display: none;
-        }
-
         .versteckte_td {
             height: 10px; 
             border-right-style: hidden; 
@@ -214,13 +211,13 @@
     let alte_spielernamen_herren = [];
     let alte_spielernamen_damen = [];
     let vorheriger_modus = "";
-    let auswertung_herren = [];
-    let auswertung_damen = [];
+    let herren_punkte_games = []; // speichert Objekte (Name, Punkte, Games, ...)
+    let damen_punkte_games = [];
 
     // globale Variablen für die Ergebnisbestimmung und Speichern/Wiederherstellen
     let turnierspielplan = [];
     let spielernamen = [];
-    let spielernamen_herren = [];
+    let spielernamen_herren = [];   // speichert nur Namen
     let spielernamen_damen = [];
     let zeiten = [];
 
@@ -1095,6 +1092,13 @@
     }
     
     function erstellen() {
+        // globale Variablen zurücksetzen
+        turnierspielplan = [];
+        spielernamen = [];
+        spielernamen_herren = [];
+        spielernamen_damen = [];
+        zeiten = [];
+
         inputsUmschalten(true);
         let spieler_gesamt = [];
         let partner_gesamt = [];
@@ -1259,7 +1263,7 @@
             }
 
             turnierspielplan = turnier.slice();
-            spielernamen = spieler_gesamt.slice();
+            spielernamen = spieler_gesamt.slice(1); // ohne das 0. leere Element
 
             // Für Mixed-Wiederherstellung alle Namen pro Geschlecht speichern
             if (mixed_checkbox == true) {
@@ -1293,14 +1297,13 @@
     }
 
     function ergebnisbestimmungstabelle(turnier, spieler) {
-        //document.getElementById("ergebnisbestimmungstabellen_button").style.display = "none";
         document.getElementById("ergebnis_eintragung_div").innerHTML = "<div id='druckbereich2'><h3>Ergebnis &ndash; " + document.getElementById("turniername").value + " &ndash; " + new Date().toLocaleDateString('en-GB').replace(/\//g, '.') + "</h3><table id='ergebnisbestimmungstabelle'>";
         for (let i = 1; i < turnier.length; i++) {
             for (let u = 0; u < turnier[i].length; u++) {
                 let spielersplit = turnier[i][u].split(" - ");
-                document.getElementById("ergebnisbestimmungstabelle").innerHTML += "<tr><td class='aw_spieler'>" + spielersplit[0] + "</td><td><input class='aw_games' type='number' min=0></td><td class='versteckt'><label><input type='radio' name='result_" + String(i) + "_" + String(u) + "' value='Sieg' class='aw_sieg'>Sieg</label></td></tr>";
-                document.getElementById("ergebnisbestimmungstabelle").innerHTML += "<tr><td class='aw_spieler'>" + spielersplit[1] + "</td><td><input class='aw_games' type='number' min=0></td><td class='versteckt'><label><input type='radio' name='result_" + String(i) + "_" + String(u) + "' value='Sieg' class='aw_sieg'>Sieg</label></td></tr>";
-                document.getElementById("ergebnisbestimmungstabelle").innerHTML += "<tr class='unteregrenze'><td colspan='2'></td><td class='versteckt'><label><input class='aw_unentschieden' type='radio' name='result_" + String(i) + "_" + String(u) + "' value='Unentschieden'>Unentschieden</label></td></tr>";
+                document.getElementById("ergebnisbestimmungstabelle").innerHTML += "<tr><td class='aw_spieler'>" + spielersplit[0] + "</td><td><input class='aw_games' type='number' min=0></td></tr>";
+                document.getElementById("ergebnisbestimmungstabelle").innerHTML += "<tr><td class='aw_spieler'>" + spielersplit[1] + "</td><td><input class='aw_games' type='number' min=0></td></tr>";
+                document.getElementById("ergebnisbestimmungstabelle").innerHTML += "<tr class='unteregrenze'><td colspan='2'></td></tr>";
             }
         }
         document.getElementById("ergebnis_eintragung_div").innerHTML += "</table>";
@@ -1309,7 +1312,7 @@
 
         let ergebnisarray = [];
         for (let i = 0; i < document.getElementsByClassName("ergebnisse").length; i++) {
-            ergebnisarray = ergebnisarray.concat(document.getElementsByClassName("ergebnisse")[i].innerHTML.split("-"));
+            ergebnisarray = ergebnisarray.concat(document.getElementsByClassName("ergebnisse")[i].innerHTML.replace(/<br\s*\/?>/gi, "").split("-"));    // deleting any <br> in the string
         }
 
         for (let u = 0; u < document.getElementsByClassName("aw_games").length; u++) {
@@ -1321,7 +1324,7 @@
         auswertung(spieler);
     }
     
-    function auswertungSortieren(liste) {
+    function auswertungslisteSortieren(liste) {
         liste.sort((a, b) => {
         if (a.punkte === b.punkte) {
             // If punkte values are equal, sort by games in descending order
@@ -1356,7 +1359,11 @@
             siege: 0
         }));
 
-        for (let i = 1; i < spieler_punkte_games.length; i++) {
+        // Reset der Listen für Mixed-Auswertung
+        damen_punkte_games = [];
+        herren_punkte_games = [];
+
+        for (let i = 0; i < spieler_punkte_games.length; i++) {
             for (let u = 0; u < document.getElementsByClassName("aw_spieler").length; u++) {
                 if (document.getElementsByClassName("aw_spieler")[u].innerHTML.includes(spieler_punkte_games[i].spieler)) {  // wenn die Tabellenzeile den Spieler enthält
 
@@ -1386,82 +1393,82 @@
                             spieler_punkte_games[i].punkte += 1;
                         }
                     }
-
-                    spieler_punkte_games[i].games = spieler_punkte_games[i].games_gew - spieler_punkte_games[i].games_ver;
                 }
             }
+
+            spieler_punkte_games[i].games = spieler_punkte_games[i].games_gew - spieler_punkte_games[i].games_ver;
         }
 
         // Array nach Punkten, Games, Games_gew und Siege absteigend sortieren
-        auswertungSortieren(spieler_punkte_games);
-
+        auswertungslisteSortieren(spieler_punkte_games);
+        
         // Ergebnistabellenausgabe
         document.getElementById("ergebnistabellendiv").innerHTML = "<table border=1 id='ergebnistabelle'></table>";
         if (document.getElementById("mixed").checked == false) {  // wenn Normal
             document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'></tr><tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
-            for (let i = 0; i < spieler_punkte_games.length-1; i++) {
-                document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td><b>" + (i+1) + "</b></td><td>" + spieler_punkte_games[i].spieler + "</td><td>" + spieler_punkte_games[i].punkte + "</td><td>" + spieler_punkte_games[i].games + "</td><td>" + spieler_punkte_games[i].games_gew + "</td><td>" + spieler_punkte_games[i].games_ver + "</td><td>" + spieler_punkte_games[i].siege + "</td></tr>";
+            for (let i = 0; i < spieler_punkte_games.length; i++) {
+                document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td contenteditable='true'><b>" + (i+1) + "</b></td><td>" + spieler_punkte_games[i].spieler + "</td><td>" + spieler_punkte_games[i].punkte + "</td><td>" + spieler_punkte_games[i].games + "</td><td>" + spieler_punkte_games[i].games_gew + "</td><td>" + spieler_punkte_games[i].games_ver + "</td><td>" + spieler_punkte_games[i].siege + "</td></tr>";
             }
         }
         else { // wenn Mixed
-            for (let i = 0; i < spieler_punkte_games.length-1; i++) {   // alle Spieler durchgehen und nach Geschlecht aufteilen
+            for (let i = 0; i < spieler_punkte_games.length; i++) {   // alle Spieler durchgehen und nach Geschlecht aufteilen
                 if (spielernamen_herren.includes(spieler_punkte_games[i].spieler)) { // wenn Mann
-                    auswertung_herren.push(spieler_punkte_games[i]);
+                    herren_punkte_games.push(spieler_punkte_games[i]);
                 }
                 else if (spielernamen_damen.includes(spieler_punkte_games[i].spieler)) { // wenn Frau
-                    auswertung_damen.push(spieler_punkte_games[i]);
+                    damen_punkte_games.push(spieler_punkte_games[i]);
                 }
             }
             
             auswertungMixed();
         }
-
-        document.getElementById("ergebnis_eintragung_div").innerHTML += "<br><p>Reihung: 1. Punkte, 2. Game-Diff., 3. Games gew., 4. Siege</p>";
-
+        
+        // insertAdjacentHTML statt innerHTML weil sonst die Number-Inputs gelöscht werden
+        document.getElementById("ergebnis_eintragung_div").insertAdjacentHTML("beforeend", "<br><p>Reihung: 1. Punkte, 2. Game-Diff., 3. Games gew., 4. Siege</p>");
+        
         if (!document.getElementById("drucken_ergebnistabelle")) {
-            document.getElementById("tabellendiv").innerHTML += "<p><button id='drucken_ergebnistabelle' class='tabellenbuttons' onclick='drucken(\"ergebnis_eintragung_div\")'>Ergebnis-Auswertung drucken</button></p>";
-        }        
+            document.getElementById("tabellendiv").insertAdjacentHTML("beforeend", "<p><button id='drucken_ergebnistabelle' class='tabellenbuttons' onclick='drucken(\"ergebnis_eintragung_div\")'>Ergebnis-Auswertung drucken</button></p>");
+        }
     }
     
     function auswertungMixed() {
         document.getElementById("ergebnistabelle").innerHTML = "<tr class='tabhead'><th colspan=7>Damen</th></tr>";
         document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
-        for (let i = 0; i < auswertung_damen.length; i++) {
-            document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td><b>" + (i+1) + "</b></td><td onclick='spielerVerschieben(\"" + auswertung_damen[i].spieler + "\", \"damen\")' title='Draufklicken zum Verschieben zu den Herren' style='cursor: pointer'>" + auswertung_damen[i].spieler + "</td><td>" + auswertung_damen[i].punkte + "</td><td>" + auswertung_damen[i].games + "</td><td>" + auswertung_damen[i].games_gew + "</td><td>" + auswertung_damen[i].games_ver + "</td><td>" + auswertung_damen[i].siege + "</td></tr>";
+        alert(damen_punkte_games.length);
+        for (let i = 0; i < damen_punkte_games.length; i++) {
+            document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td contenteditable='true'><b>" + (i+1) + "</b></td><td onclick='spielerVerschieben(\"" + damen_punkte_games[i].spieler + "\", \"damen\")' title='Draufklicken zum Verschieben zu den Herren' style='cursor: pointer'>" + damen_punkte_games[i].spieler + "</td><td>" + damen_punkte_games[i].punkte + "</td><td>" + damen_punkte_games[i].games + "</td><td>" + damen_punkte_games[i].games_gew + "</td><td>" + damen_punkte_games[i].games_ver + "</td><td>" + damen_punkte_games[i].siege + "</td></tr>";
         }
         document.getElementById("ergebnistabelle").innerHTML += "<tr><td colspan=7 class='versteckte_td'></td></tr>";
 
         document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th colspan=7>Herren</th></tr>";
         document.getElementById("ergebnistabelle").innerHTML += "<tr class='tabhead'><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Game-Diff.</th><th>Games gew.</th><th>Games verl.</th><th>Siege</th></tr>";
-        for (let i = 0; i < auswertung_herren.length; i++) {
-            document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td><b>" + (i+1) + "</b></td><td onclick='spielerVerschieben(\"" + auswertung_herren[i].spieler + "\", \"herren\")' title='Draufklicken zum Verschieben zu den Damen' style='cursor: pointer'>" + auswertung_herren[i].spieler + "</td><td>" + auswertung_herren[i].punkte + "</td><td>" + auswertung_herren[i].games + "</td><td>" + auswertung_herren[i].games_gew + "</td><td>" + auswertung_herren[i].games_ver + "</td><td>" + auswertung_herren[i].siege + "</td></tr>";
+        for (let i = 0; i < herren_punkte_games.length; i++) {
+            document.getElementById("ergebnistabelle").innerHTML += "<tr class='spielplantabellen'><td contenteditable='true'><b>" + (i+1) + "</b></td><td onclick='spielerVerschieben(\"" + herren_punkte_games[i].spieler + "\", \"herren\")' title='Draufklicken zum Verschieben zu den Damen' style='cursor: pointer'>" + herren_punkte_games[i].spieler + "</td><td>" + herren_punkte_games[i].punkte + "</td><td>" + herren_punkte_games[i].games + "</td><td>" + herren_punkte_games[i].games_gew + "</td><td>" + herren_punkte_games[i].games_ver + "</td><td>" + herren_punkte_games[i].siege + "</td></tr>";
         }
     }
 
     function spielerVerschieben(spieler, ursprung) {
         if (ursprung == "damen") {
-            let index = auswertung_damen.findIndex(player => player.spieler === spieler);
-            let player = auswertung_damen.splice(index, 1)[0]; // Remove from Damen
-            auswertung_herren.push(player); // Add to Herren
+            let index = damen_punkte_games.findIndex(player => player.spieler === spieler);
+            let player = damen_punkte_games.splice(index, 1)[0]; // Remove from Damen
+            herren_punkte_games.push(player); // Add to Herren
         }
         else if (ursprung == "herren") {
-            let index = auswertung_herren.findIndex(player => player.spieler === spieler);
-            let player = auswertung_herren.splice(index, 1)[0]; // Remove from Herren
-            auswertung_damen.push(player); // Add to Damen
+            let index = herren_punkte_games.findIndex(player => player.spieler === spieler);
+            let player = herren_punkte_games.splice(index, 1)[0]; // Remove from Herren
+            damen_punkte_games.push(player); // Add to Damen
         }
         else {
             alert("Huh?");
         }
 
         // beide Listen wieder nach Punkten, Games, Games_gew und Siege absteigend sortieren
-        auswertungSortieren(auswertung_herren);
-        auswertungSortieren(auswertung_damen);
+        auswertungslisteSortieren(herren_punkte_games);
+        auswertungslisteSortieren(damen_punkte_games);
 
         auswertungMixed();
 
     }
-    
-    
     </script>
     
     <h1>Spielplangenerator &ndash; Doppelturnier</h1>
